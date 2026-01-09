@@ -70,6 +70,22 @@ export default function ReactionGame() {
     setGameState((prev) => handleClick(prev));
   }, []);
 
+  // 키보드 이벤트 (스페이스/엔터)
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === ' ' || e.key === 'Enter') {
+        e.preventDefault();
+        // 결과 화면에서는 키보드 무시
+        if (gameState.phase !== 'result') {
+          onClick();
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [gameState.phase, onClick]);
+
   // 새 게임
   const newGame = () => {
     if (timerRef.current) {
@@ -307,7 +323,8 @@ export default function ReactionGame() {
           <li>
             • <span className="text-green-500 font-bold">초록색</span>: 최대한 빨리 클릭!
           </li>
-          <li>• 초록색이 되기 전에 클릭하면 실패</li>
+          <li>• 클릭 또는 스페이스/엔터 키 사용</li>
+          <li>• 초록색이 되기 전에 누르면 실패</li>
           <li>• {roundCount}회 측정 후 평균 계산</li>
         </ul>
       </div>

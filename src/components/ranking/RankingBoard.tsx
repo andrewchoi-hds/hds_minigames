@@ -1,0 +1,192 @@
+'use client';
+
+import { useState, useEffect } from 'react';
+import { getRanking, getMyRank, Period } from '@/lib/ranking';
+import { GameType, GAME_NAMES, RankingEntry } from '@/lib/supabase';
+import { getLocalUser } from '@/lib/auth';
+
+type Props = {
+  gameType: GameType;
+  difficulty?: string;
+  showPeriodFilter?: boolean;
+  limit?: number;
+};
+
+const PERIOD_LABELS: Record<Period, string> = {
+  daily: '일간',
+  weekly: '주간',
+  all: '전체',
+};
+
+export default function RankingBoard({
+  gameType,
+  difficulty,
+  showPeriodFilter = true,
+  limit = 100,
+}: Props) {
+  const [period, setPeriod] = useState<Period>('all');
+  const [ranking, setRanking] = useState<RankingEntry[]>([]);
+  const [myRank, setMyRank] = useState<number>(0);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string>('');
+
+  const currentUser = getLocalUser();
+
+  useEffect(() => {
+    loadRanking();
+  }, [gameType, difficulty, period]);
+
+  const loadRanking = async () => {
+    setIsLoading(true);
+    setError('');
+
+    const [rankingResult, myRankResult] = await Promise.all([
+      getRanking({ gameType, difficulty, period, limit }),
+      currentUser ? getMyRank({ gameType, difficulty, period }) : Promise.resolve(0),
+    ]);
+
+    if (rankingResult.error) {
+      setError(rankingResult.error);
+    } else {
+      setRanking(rankingResult.data);
+    }
+
+    setMyRank(myRankResult);
+    setIsLoading(false);
+  };
+
+  const formatTime = (seconds: number | null) => {
+    if (!seconds) return '-';
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  };
+
+  const getRankIcon = (rank: number) => {
+    if (rank === 1) return '🥇';
+    if (rank === 2) return '🥈';
+    if (rank === 3) return '🥉';
+    return rank.toString();
+  };
+
+  return (
+    <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm overflow-hidden">
+      {/* 헤더 */}
+      <div className="p-4 border-b border-gray-200 dark:border-gray-700">
+        <div className="flex items-center justify-between">
+          <h2 className="text-lg font-bold flex items-center gap-2">
+            🏆 {GAME_NAMES[gameType]} 랭킹
+            {difficulty && (
+              <span className="text-sm font-normal text-gray-500 dark:text-gray-400">
+                - {difficulty}
+              </span>
+            )}
+          </h2>
+
+          {showPeriodFilter && (
+            <div className="flex gap-1">
+              {(Object.keys(PERIOD_LABELS) as Period[]).map((p) => (
+                <button
+                  key={p}
+                  onClick={() => setPeriod(p)}
+                  className={`px-3 py-1 text-sm rounded-lg transition-colors ${
+                    period === p
+                      ? 'bg-blue-500 text-white'
+                      : 'bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600'
+                  }`}
+                >
+                  {PERIOD_LABELS[p]}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* 로딩 */}
+      {isLoading && (
+        <div className="p-8 text-center">
+          <div className="animate-spin w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full mx-auto" />
+        </div>
+      )}
+
+      {/* 에러 */}
+      {error && (
+        <div className="p-4 text-center text-red-500">
+          {error}
+          <button
+            onClick={loadRanking}
+            className="block mx-auto mt-2 text-sm text-blue-500 hover:underline"
+          >
+            다시 시도
+          </button>
+        </div>
+      )}
+
+      {/* 랭킹 테이블 */}
+      {!isLoading && !error && (
+        <>
+          {ranking.length === 0 ? (
+            <div className="p-8 text-center text-gray-500 dark:text-gray-400">
+              아직 기록이 없습니다
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead className="bg-gray-50 dark:bg-gray-700/50 text-sm">
+                  <tr>
+                    <th className="px-4 py-3 text-left">순위</th>
+                    <th className="px-4 py-3 text-left">닉네임</th>
+                    <th className="px-4 py-3 text-right">점수</th>
+                    <th className="px-4 py-3 text-right">시간</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
+                  {ranking.map((entry) => {
+                    const isMe = currentUser && entry.user_id === currentUser.id;
+                    return (
+                      <tr
+                        key={entry.user_id}
+                        className={`${
+                          isMe ? 'bg-blue-50 dark:bg-blue-900/20' : ''
+                        } hover:bg-gray-50 dark:hover:bg-gray-700/30`}
+                      >
+                        <td className="px-4 py-3 font-medium">
+                          <span className={entry.rank <= 3 ? 'text-xl' : ''}>
+                            {getRankIcon(entry.rank)}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3">
+                          <span className={isMe ? 'font-bold text-blue-500' : ''}>
+                            {entry.nickname}
+                            {isMe && ' (나)'}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3 text-right font-mono font-bold">
+                          {entry.score.toLocaleString()}
+                        </td>
+                        <td className="px-4 py-3 text-right font-mono text-gray-500">
+                          {formatTime(entry.time_seconds)}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
+
+          {/* 내 순위 */}
+          {currentUser && myRank > 0 && (
+            <div className="p-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700/30">
+              <div className="text-center">
+                <span className="text-gray-500 dark:text-gray-400">내 순위: </span>
+                <span className="font-bold text-lg text-blue-500">{myRank}위</span>
+              </div>
+            </div>
+          )}
+        </>
+      )}
+    </div>
+  );
+}

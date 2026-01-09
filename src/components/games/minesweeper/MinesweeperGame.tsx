@@ -11,6 +11,8 @@ import {
   getDifficultyConfig,
   getNumberColor,
 } from '@/lib/games/minesweeper';
+import ScoreSubmitModal from '@/components/ranking/ScoreSubmitModal';
+import { ScoreCalculator } from '@/lib/ranking';
 
 const DIFFICULTY_CONFIG: Record<Difficulty, { label: string; description: string; color: string }> = {
   easy: { label: 'Easy', description: '8×8, 지뢰 10개', color: 'bg-green-500' },
@@ -26,6 +28,8 @@ export default function MinesweeperGame() {
   const [gameState, setGameState] = useState<GameState | null>(null);
   const [timer, setTimer] = useState(0);
   const [isTimerRunning, setIsTimerRunning] = useState(false);
+  const [showScoreModal, setShowScoreModal] = useState(false);
+  const [finalScore, setFinalScore] = useState(0);
 
   // 게임 시작
   const startGame = useCallback((diff: Difficulty) => {
@@ -255,6 +259,12 @@ export default function MinesweeperGame() {
                   <span className="text-gray-500 dark:text-gray-400">클리어 시간</span>
                   <span className="font-bold">{formatTime(timer)}</span>
                 </div>
+                <div className="flex justify-between mt-2">
+                  <span className="text-gray-500 dark:text-gray-400">점수</span>
+                  <span className="font-bold text-blue-500">
+                    {ScoreCalculator.minesweeper(difficulty, timer).toLocaleString()}점
+                  </span>
+                </div>
               </div>
             )}
 
@@ -265,16 +275,38 @@ export default function MinesweeperGame() {
               >
                 난이도 선택
               </button>
-              <button
-                onClick={() => startGame(difficulty)}
-                className="flex-1 py-3 bg-gray-500 text-white rounded-xl font-medium hover:bg-gray-600 transition-colors"
-              >
-                다시 하기
-              </button>
+              {gameState.isWon ? (
+                <button
+                  onClick={() => {
+                    setFinalScore(ScoreCalculator.minesweeper(difficulty, timer));
+                    setShowScoreModal(true);
+                  }}
+                  className="flex-1 py-3 bg-blue-500 text-white rounded-xl font-medium hover:bg-blue-600 transition-colors"
+                >
+                  랭킹 등록
+                </button>
+              ) : (
+                <button
+                  onClick={() => startGame(difficulty)}
+                  className="flex-1 py-3 bg-gray-500 text-white rounded-xl font-medium hover:bg-gray-600 transition-colors"
+                >
+                  다시 하기
+                </button>
+              )}
             </div>
           </div>
         </div>
       )}
+
+      {/* 점수 제출 모달 */}
+      <ScoreSubmitModal
+        isOpen={showScoreModal}
+        onClose={() => setShowScoreModal(false)}
+        gameType="minesweeper"
+        difficulty={difficulty}
+        score={finalScore}
+        timeSeconds={timer}
+      />
     </div>
   );
 }

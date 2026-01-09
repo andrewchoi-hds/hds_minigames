@@ -12,22 +12,25 @@ export async function submitScore(params: {
   metadata?: Record<string, unknown>;
 }): Promise<{ success: boolean; error?: string }> {
   const user = getLocalUser();
+
   if (!user) {
     return { success: false, error: '로그인이 필요합니다' };
   }
 
-  const { error } = await supabase.from('scores').insert({
+  const insertData = {
     user_id: user.id,
     game_type: params.gameType,
     difficulty: params.difficulty || null,
     score: params.score,
     time_seconds: params.timeSeconds || null,
     metadata: params.metadata || {},
-  });
+  };
+
+  const { error } = await supabase.from('scores').insert(insertData).select();
 
   if (error) {
     console.error('Score submit error:', error);
-    return { success: false, error: '점수 제출 중 오류가 발생했습니다' };
+    return { success: false, error: `점수 제출 중 오류: ${error.message}` };
   }
 
   return { success: true };

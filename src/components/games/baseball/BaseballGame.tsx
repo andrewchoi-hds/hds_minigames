@@ -13,6 +13,8 @@ import {
   getResultColor,
   getDifficultyConfig,
 } from '@/lib/games/baseball';
+import ScoreSubmitModal from '@/components/ranking/ScoreSubmitModal';
+import { ScoreCalculator } from '@/lib/ranking';
 
 const DIFFICULTY_OPTIONS: { key: Difficulty; color: string }[] = [
   { key: '3digit', color: 'bg-green-500' },
@@ -29,6 +31,7 @@ export default function BaseballGame() {
     '3digit': null,
     '4digit': null,
   });
+  const [showScoreModal, setShowScoreModal] = useState(false);
 
   // 로컬 스토리지에서 최고 기록 로드
   useEffect(() => {
@@ -361,9 +364,15 @@ export default function BaseballGame() {
                   <div className="text-xs text-gray-500">소요 시간</div>
                 </div>
               </div>
+              <div className="pt-2 border-t border-gray-200 dark:border-gray-600">
+                <div className="text-sm text-gray-500 dark:text-gray-400">점수</div>
+                <div className="text-xl font-bold text-blue-500">
+                  {ScoreCalculator.baseball(gameState.guesses.length, timer, gameState.digitCount).toLocaleString()}점
+                </div>
+              </div>
             </div>
 
-            <div className="flex gap-3">
+            <div className="flex gap-3 mb-3">
               <button
                 onClick={() => setPhase('select')}
                 className="flex-1 py-3 bg-gray-100 dark:bg-gray-700 rounded-xl font-medium hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
@@ -372,14 +381,31 @@ export default function BaseballGame() {
               </button>
               <button
                 onClick={() => startGame(difficulty)}
-                className="flex-1 py-3 bg-blue-500 text-white rounded-xl font-medium hover:bg-blue-600 transition-colors"
+                className="flex-1 py-3 bg-gray-100 dark:bg-gray-700 rounded-xl font-medium hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
               >
                 다시 하기
               </button>
             </div>
+            <button
+              onClick={() => setShowScoreModal(true)}
+              className="w-full py-3 bg-blue-500 text-white rounded-xl font-medium hover:bg-blue-600 transition-colors"
+            >
+              랭킹 등록
+            </button>
           </div>
         </div>
       )}
+
+      {/* 점수 제출 모달 */}
+      <ScoreSubmitModal
+        isOpen={showScoreModal}
+        onClose={() => setShowScoreModal(false)}
+        gameType="baseball"
+        difficulty={difficulty}
+        score={ScoreCalculator.baseball(gameState?.guesses.length || 20, timer, gameState?.digitCount || 3)}
+        timeSeconds={timer}
+        metadata={{ attempts: gameState?.guesses.length, digitCount: gameState?.digitCount }}
+      />
     </div>
   );
 }

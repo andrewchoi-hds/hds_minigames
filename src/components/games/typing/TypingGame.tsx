@@ -14,6 +14,8 @@ import {
   getMatchingWords,
   getDifficultyConfig,
 } from '@/lib/games/typing';
+import ScoreSubmitModal from '@/components/ranking/ScoreSubmitModal';
+import { ScoreCalculator } from '@/lib/ranking';
 
 const DIFFICULTY_OPTIONS: { key: Difficulty; color: string; description: string }[] = [
   { key: 'easy', color: 'bg-green-500', description: '짧은 단어, 느린 속도' },
@@ -33,6 +35,7 @@ export default function TypingGame() {
     normal: 0,
     hard: 0,
   });
+  const [showScoreModal, setShowScoreModal] = useState(false);
 
   const inputRef = useRef<HTMLInputElement>(null);
   const gameLoopRef = useRef<number | null>(null);
@@ -292,7 +295,7 @@ export default function TypingGame() {
             </div>
           </div>
 
-          <div className="flex gap-3">
+          <div className="flex gap-3 mb-3">
             <button
               onClick={() => setPhase('select')}
               className="flex-1 py-3 bg-gray-100 dark:bg-gray-700 rounded-xl font-medium hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
@@ -301,12 +304,28 @@ export default function TypingGame() {
             </button>
             <button
               onClick={startGame}
-              className="flex-1 py-3 bg-blue-500 text-white rounded-xl font-medium hover:bg-blue-600 transition-colors"
+              className="flex-1 py-3 bg-gray-100 dark:bg-gray-700 rounded-xl font-medium hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
             >
               다시 하기
             </button>
           </div>
+          <button
+            onClick={() => setShowScoreModal(true)}
+            className="w-full py-3 bg-blue-500 text-white rounded-xl font-medium hover:bg-blue-600 transition-colors"
+          >
+            랭킹 등록 ({ScoreCalculator.typing(wpm, accuracy, gameState.maxCombo).toLocaleString()}점)
+          </button>
         </div>
+
+        {/* 점수 제출 모달 */}
+        <ScoreSubmitModal
+          isOpen={showScoreModal}
+          onClose={() => setShowScoreModal(false)}
+          gameType="typing"
+          difficulty={difficulty}
+          score={ScoreCalculator.typing(wpm, accuracy, gameState.maxCombo)}
+          metadata={{ wpm, accuracy, maxCombo: gameState.maxCombo, duration }}
+        />
       </div>
     );
   }

@@ -13,6 +13,8 @@ import {
   getKeyColorClass,
   LetterState,
 } from '@/lib/games/wordle';
+import ScoreSubmitModal from '@/components/ranking/ScoreSubmitModal';
+import { ScoreCalculator } from '@/lib/ranking';
 
 type GameMode = 'daily' | 'infinite';
 
@@ -30,6 +32,8 @@ export default function WordleGame() {
   const [revealRow, setRevealRow] = useState<number | null>(null);
   const [message, setMessage] = useState<string>('');
   const [stats, setStats] = useState({ played: 0, won: 0, streak: 0 });
+  const [showScoreModal, setShowScoreModal] = useState(false);
+  const [gameStartTime, setGameStartTime] = useState<number>(0);
 
   // 로컬 스토리지에서 통계 로드
   useEffect(() => {
@@ -53,6 +57,7 @@ export default function WordleGame() {
     setMessage('');
     setShakeRow(null);
     setRevealRow(null);
+    setGameStartTime(Date.now());
   }, []);
 
   // 메시지 표시
@@ -347,23 +352,43 @@ export default function WordleGame() {
 
       {/* 게임 오버 시 버튼 */}
       {gameState.isGameOver && (
-        <div className="mt-4 flex justify-center gap-3">
-          <button
-            onClick={() => setPhase('select')}
-            className="px-4 py-2 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg font-medium transition-colors"
-          >
-            모드 선택
-          </button>
-          {mode === 'infinite' && (
+        <div className="mt-4 flex flex-col items-center gap-3">
+          <div className="flex gap-3">
             <button
-              onClick={() => startGame('infinite')}
-              className="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg font-medium transition-colors"
+              onClick={() => setPhase('select')}
+              className="px-4 py-2 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg font-medium transition-colors"
             >
-              다시 하기
+              모드 선택
+            </button>
+            {mode === 'infinite' && (
+              <button
+                onClick={() => startGame('infinite')}
+                className="px-4 py-2 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg font-medium transition-colors"
+              >
+                다시 하기
+              </button>
+            )}
+          </div>
+          {gameState.isWon && (
+            <button
+              onClick={() => setShowScoreModal(true)}
+              className="px-6 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg font-medium transition-colors"
+            >
+              랭킹 등록 ({ScoreCalculator.wordle(gameState.guesses.length, Math.floor((Date.now() - gameStartTime) / 1000)).toLocaleString()}점)
             </button>
           )}
         </div>
       )}
+
+      {/* 점수 제출 모달 */}
+      <ScoreSubmitModal
+        isOpen={showScoreModal}
+        onClose={() => setShowScoreModal(false)}
+        gameType="wordle"
+        score={ScoreCalculator.wordle(gameState?.guesses.length || 6, Math.floor((Date.now() - gameStartTime) / 1000))}
+        timeSeconds={Math.floor((Date.now() - gameStartTime) / 1000)}
+        metadata={{ attempts: gameState?.guesses.length, mode }}
+      />
     </div>
   );
 }

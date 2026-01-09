@@ -13,6 +13,8 @@ import {
 } from '@/lib/games/sudoku';
 import SudokuBoard from './SudokuBoard';
 import NumberPad from './NumberPad';
+import ScoreSubmitModal from '@/components/ranking/ScoreSubmitModal';
+import { ScoreCalculator } from '@/lib/ranking';
 
 const DIFFICULTY_CONFIG: Record<Difficulty, { label: string; color: string; description: string }> = {
   normal: { label: 'Normal', color: 'bg-green-500', description: '입문자를 위한 난이도' },
@@ -48,6 +50,8 @@ export default function SudokuGame() {
   const [showSettings, setShowSettings] = useState(false);
   const [showNewGameConfirm, setShowNewGameConfirm] = useState<Difficulty | null>(null);
   const [isPaused, setIsPaused] = useState(false);
+  const [showScoreModal, setShowScoreModal] = useState(false);
+  const [hintsUsed, setHintsUsed] = useState(0);
 
   // 새 게임 시작
   const startNewGame = useCallback((diff: Difficulty) => {
@@ -68,6 +72,7 @@ export default function SudokuGame() {
     setShowSettings(false);
     setShowNewGameConfirm(null);
     setIsPaused(false);
+    setHintsUsed(0);
   }, []);
 
   // 타이머
@@ -209,6 +214,7 @@ export default function SudokuGame() {
     newBoard[hint.row][hint.col].notes = new Set();
     setBoard(newBoard);
     setHintsRemaining(prev => prev - 1);
+    setHintsUsed(prev => prev + 1);
     setSelectedCell({ row: hint.row, col: hint.col });
 
     if (isBoardComplete(newBoard)) {
@@ -417,8 +423,14 @@ export default function SudokuGame() {
               </span>
               {' '}난이도 클리어!
             </p>
-            <p className="text-3xl font-mono font-bold mb-6">{formatTime(timer)}</p>
-            <div className="flex gap-3">
+            <p className="text-3xl font-mono font-bold mb-2">{formatTime(timer)}</p>
+            <div className="bg-gray-50 dark:bg-gray-700/50 rounded-xl p-3 mb-4">
+              <div className="text-sm text-gray-500 dark:text-gray-400">점수</div>
+              <div className="text-2xl font-bold text-blue-500">
+                {ScoreCalculator.sudoku(difficulty, timer, hintsUsed).toLocaleString()}점
+              </div>
+            </div>
+            <div className="flex gap-3 mb-3">
               <button
                 onClick={() => setGameState('select')}
                 className="flex-1 py-3 bg-gray-100 dark:bg-gray-700 rounded-xl font-medium hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
@@ -427,14 +439,31 @@ export default function SudokuGame() {
               </button>
               <button
                 onClick={() => startNewGame(difficulty)}
-                className="flex-1 py-3 bg-blue-500 text-white rounded-xl font-medium hover:bg-blue-600 transition-colors"
+                className="flex-1 py-3 bg-gray-100 dark:bg-gray-700 rounded-xl font-medium hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
               >
                 다시 플레이
               </button>
             </div>
+            <button
+              onClick={() => setShowScoreModal(true)}
+              className="w-full py-3 bg-blue-500 text-white rounded-xl font-medium hover:bg-blue-600 transition-colors"
+            >
+              랭킹 등록
+            </button>
           </div>
         </div>
       )}
+
+      {/* 점수 제출 모달 */}
+      <ScoreSubmitModal
+        isOpen={showScoreModal}
+        onClose={() => setShowScoreModal(false)}
+        gameType="sudoku"
+        difficulty={difficulty}
+        score={ScoreCalculator.sudoku(difficulty, timer, hintsUsed)}
+        timeSeconds={timer}
+        metadata={{ hintsUsed }}
+      />
     </div>
   );
 }

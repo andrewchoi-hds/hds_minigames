@@ -11,6 +11,8 @@ import {
   getDifficultyConfig,
   getTileColor,
 } from '@/lib/games/sliding-puzzle';
+import ScoreSubmitModal from '@/components/ranking/ScoreSubmitModal';
+import { ScoreCalculator } from '@/lib/ranking';
 
 const DIFFICULTY_OPTIONS: { key: Difficulty; color: string }[] = [
   { key: '3x3', color: 'bg-green-500' },
@@ -28,6 +30,7 @@ export default function SlidingPuzzleGame() {
     '4x4': null,
     '5x5': null,
   });
+  const [showScoreModal, setShowScoreModal] = useState(false);
 
   // 로컬 스토리지에서 최고 기록 로드
   useEffect(() => {
@@ -288,9 +291,15 @@ export default function SlidingPuzzleGame() {
                 <span className="text-gray-500 dark:text-gray-400">소요 시간</span>
                 <span className="font-bold">{formatTime(timer)}</span>
               </div>
+              <div className="flex justify-between">
+                <span className="text-gray-500 dark:text-gray-400">점수</span>
+                <span className="font-bold text-blue-500">
+                  {ScoreCalculator.slidingPuzzle(difficulty, gameState.moves, timer).toLocaleString()}점
+                </span>
+              </div>
             </div>
 
-            <div className="flex gap-3">
+            <div className="flex gap-3 mb-3">
               <button
                 onClick={() => setPhase('select')}
                 className="flex-1 py-3 bg-gray-100 dark:bg-gray-700 rounded-xl font-medium hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
@@ -299,14 +308,31 @@ export default function SlidingPuzzleGame() {
               </button>
               <button
                 onClick={() => startGame(difficulty)}
-                className="flex-1 py-3 bg-blue-500 text-white rounded-xl font-medium hover:bg-blue-600 transition-colors"
+                className="flex-1 py-3 bg-gray-100 dark:bg-gray-700 rounded-xl font-medium hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
               >
                 다시 하기
               </button>
             </div>
+            <button
+              onClick={() => setShowScoreModal(true)}
+              className="w-full py-3 bg-blue-500 text-white rounded-xl font-medium hover:bg-blue-600 transition-colors"
+            >
+              랭킹 등록
+            </button>
           </div>
         </div>
       )}
+
+      {/* 점수 제출 모달 */}
+      <ScoreSubmitModal
+        isOpen={showScoreModal}
+        onClose={() => setShowScoreModal(false)}
+        gameType="sliding-puzzle"
+        difficulty={difficulty}
+        score={ScoreCalculator.slidingPuzzle(difficulty, gameState?.moves || 0, timer)}
+        timeSeconds={timer}
+        metadata={{ moves: gameState?.moves }}
+      />
     </div>
   );
 }

@@ -76,27 +76,41 @@ export default function Game2048() {
 
   // 터치 입력
   const handleTouchStart = (e: React.TouchEvent) => {
+    const touch = e.touches[0];
     setTouchStart({
-      x: e.touches[0].clientX,
-      y: e.touches[0].clientY,
+      x: touch.clientX,
+      y: touch.clientY,
     });
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    // 스와이프 중 스크롤 방지
+    if (touchStart) {
+      e.preventDefault();
+    }
   };
 
   const handleTouchEnd = (e: React.TouchEvent) => {
     if (!touchStart || showMilestoneModal) return;
 
-    const deltaX = e.changedTouches[0].clientX - touchStart.x;
-    const deltaY = e.changedTouches[0].clientY - touchStart.y;
-    const minSwipe = 50;
+    const touch = e.changedTouches[0];
+    const deltaX = touch.clientX - touchStart.x;
+    const deltaY = touch.clientY - touchStart.y;
+    const minSwipe = 30; // 더 민감하게 조정
 
-    if (Math.abs(deltaX) > Math.abs(deltaY)) {
-      if (Math.abs(deltaX) > minSwipe) {
-        handleMove(deltaX > 0 ? 'right' : 'left');
-      }
+    const absDeltaX = Math.abs(deltaX);
+    const absDeltaY = Math.abs(deltaY);
+
+    // 최소 스와이프 거리 확인
+    if (absDeltaX < minSwipe && absDeltaY < minSwipe) {
+      setTouchStart(null);
+      return;
+    }
+
+    if (absDeltaX > absDeltaY) {
+      handleMove(deltaX > 0 ? 'right' : 'left');
     } else {
-      if (Math.abs(deltaY) > minSwipe) {
-        handleMove(deltaY > 0 ? 'down' : 'up');
-      }
+      handleMove(deltaY > 0 ? 'down' : 'up');
     }
 
     setTouchStart(null);
@@ -145,8 +159,10 @@ export default function Game2048() {
 
       {/* 게임 보드 */}
       <div
-        className="relative bg-amber-200 dark:bg-amber-900/60 rounded-xl p-2 sm:p-3 touch-none"
+        className="relative bg-amber-200 dark:bg-amber-900/60 rounded-xl p-2 sm:p-3 select-none"
+        style={{ touchAction: 'none' }}
         onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
       >
         {/* 그리드 배경 */}

@@ -11,6 +11,8 @@ import {
   calculateStars,
   calculateScore,
 } from '@/lib/games/memory';
+import ScoreSubmitModal from '@/components/ranking/ScoreSubmitModal';
+import { ScoreCalculator } from '@/lib/ranking';
 
 const DIFFICULTY_CONFIG: Record<Difficulty, { label: string; description: string; color: string }> = {
   easy: { label: 'Easy', description: '6쌍 (3×4)', color: 'bg-green-500' },
@@ -27,6 +29,7 @@ export default function MemoryGame() {
   const [timer, setTimer] = useState(0);
   const [isChecking, setIsChecking] = useState(false);
   const [showResult, setShowResult] = useState(false);
+  const [showScoreModal, setShowScoreModal] = useState(false);
 
   // 게임 시작
   const startGame = useCallback((diff: Difficulty) => {
@@ -228,7 +231,7 @@ export default function MemoryGame() {
               </div>
             </div>
 
-            <div className="flex gap-3">
+            <div className="flex gap-3 mb-3">
               <button
                 onClick={() => setPhase('select')}
                 className="flex-1 py-3 bg-gray-100 dark:bg-gray-700 rounded-xl font-medium hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
@@ -237,14 +240,31 @@ export default function MemoryGame() {
               </button>
               <button
                 onClick={() => startGame(difficulty)}
-                className="flex-1 py-3 bg-purple-500 text-white rounded-xl font-medium hover:bg-purple-600 transition-colors"
+                className="flex-1 py-3 bg-gray-100 dark:bg-gray-700 rounded-xl font-medium hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
               >
                 다시 하기
               </button>
             </div>
+            <button
+              onClick={() => setShowScoreModal(true)}
+              className="w-full py-3 bg-purple-500 text-white rounded-xl font-medium hover:bg-purple-600 transition-colors"
+            >
+              랭킹 등록
+            </button>
           </div>
         </div>
       )}
+
+      {/* 점수 제출 모달 */}
+      <ScoreSubmitModal
+        isOpen={showScoreModal}
+        onClose={() => setShowScoreModal(false)}
+        gameType="memory"
+        difficulty={difficulty}
+        score={ScoreCalculator.memory(difficulty, gameState?.moves || 0, timer)}
+        timeSeconds={timer}
+        metadata={{ moves: gameState?.moves, stars }}
+      />
     </div>
   );
 }

@@ -67,7 +67,7 @@ export async function registerOrLogin(
       // unique violation - 동시 생성 충돌
       return { success: false, error: '이미 사용 중인 닉네임입니다' };
     }
-    return { success: false, error: '등록 중 오류가 발생했습니다' };
+    return { success: false, error: `등록 중 오류: ${insertError.message}` };
   }
 
   setLocalUser({ id: newUser.id, nickname: newUser.nickname });

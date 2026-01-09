@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { getLocalUser, logout } from '@/lib/auth';
+import { getLocalUser, logout, LocalUser } from '@/lib/auth';
+import { getCountryByCode, DEFAULT_COUNTRY_CODE } from '@/lib/data/countries';
 import NicknameSetup from '@/components/NicknameSetup';
 
 const games = [
@@ -63,7 +64,7 @@ const games = [
 ];
 
 export default function Home() {
-  const [user, setUser] = useState<{ id: string; nickname: string } | null>(null);
+  const [user, setUser] = useState<LocalUser | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -98,6 +99,7 @@ export default function Home() {
         {/* 상단 유저 정보 */}
         <div className="flex justify-end items-center mb-4 gap-3">
           <div className="flex items-center gap-2">
+            <span className="text-xl">{getCountryByCode(user.country || DEFAULT_COUNTRY_CODE)?.flag}</span>
             <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white font-bold text-sm">
               {user.nickname[0].toUpperCase()}
             </div>

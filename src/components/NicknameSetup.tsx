@@ -1,14 +1,17 @@
 'use client';
 
 import { useState } from 'react';
-import { registerOrLogin } from '@/lib/auth';
+import { registerOrLogin, LocalUser } from '@/lib/auth';
+import { COUNTRIES, getCountryByCode, DEFAULT_COUNTRY_CODE } from '@/lib/data/countries';
 
 type Props = {
-  onComplete: (user: { id: string; nickname: string }) => void;
+  onComplete: (user: LocalUser) => void;
 };
 
 export default function NicknameSetup({ onComplete }: Props) {
   const [nickname, setNickname] = useState('');
+  const [selectedCountry, setSelectedCountry] = useState(DEFAULT_COUNTRY_CODE);
+  const [showCountrySelect, setShowCountrySelect] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -21,12 +24,16 @@ export default function NicknameSetup({ onComplete }: Props) {
     setIsLoading(true);
     setError('');
 
-    const result = await registerOrLogin(nickname);
+    const result = await registerOrLogin(nickname, selectedCountry);
 
     setIsLoading(false);
 
     if (result.success && result.user) {
-      onComplete({ id: result.user.id, nickname: result.user.nickname });
+      onComplete({
+        id: result.user.id,
+        nickname: result.user.nickname,
+        country: selectedCountry,
+      });
     } else {
       setError(result.error || '오류가 발생했습니다');
     }
@@ -45,6 +52,48 @@ export default function NicknameSetup({ onComplete }: Props) {
 
         <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-lg">
           <div className="space-y-4">
+            {/* 국가 선택 */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                국가
+              </label>
+              <div className="relative">
+                <button
+                  type="button"
+                  onClick={() => setShowCountrySelect(!showCountrySelect)}
+                  className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl bg-gray-50 dark:bg-gray-700 flex items-center justify-between text-lg"
+                >
+                  <span className="flex items-center gap-3">
+                    <span className="text-2xl">{getCountryByCode(selectedCountry)?.flag}</span>
+                    <span>{getCountryByCode(selectedCountry)?.nameKo}</span>
+                  </span>
+                  <span className="text-gray-400">▼</span>
+                </button>
+
+                {showCountrySelect && (
+                  <div className="absolute z-10 mt-1 w-full max-h-60 overflow-y-auto bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-xl shadow-lg">
+                    {COUNTRIES.map((country) => (
+                      <button
+                        key={country.code}
+                        type="button"
+                        onClick={() => {
+                          setSelectedCountry(country.code);
+                          setShowCountrySelect(false);
+                        }}
+                        className={`w-full px-4 py-3 flex items-center gap-3 hover:bg-gray-100 dark:hover:bg-gray-700 ${
+                          selectedCountry === country.code ? 'bg-blue-50 dark:bg-blue-900/30' : ''
+                        }`}
+                      >
+                        <span className="text-2xl">{country.flag}</span>
+                        <span>{country.nameKo}</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* 닉네임 입력 */}
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 닉네임

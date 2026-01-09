@@ -1,9 +1,10 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { getLocalUser, registerOrLogin } from '@/lib/auth';
+import { getLocalUser, registerOrLogin, LocalUser } from '@/lib/auth';
 import { submitScore } from '@/lib/ranking';
 import { GameType, GAME_NAMES } from '@/lib/supabase';
+import { COUNTRIES, getCountryByCode, DEFAULT_COUNTRY_CODE } from '@/lib/data/countries';
 
 type Props = {
   isOpen: boolean;
@@ -26,8 +27,10 @@ export default function ScoreSubmitModal({
   metadata,
   onSubmitSuccess,
 }: Props) {
-  const [user, setUser] = useState<{ id: string; nickname: string } | null>(null);
+  const [user, setUser] = useState<LocalUser | null>(null);
   const [nickname, setNickname] = useState('');
+  const [selectedCountry, setSelectedCountry] = useState(DEFAULT_COUNTRY_CODE);
+  const [showCountrySelect, setShowCountrySelect] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [isSubmitted, setIsSubmitted] = useState(false);
@@ -36,6 +39,9 @@ export default function ScoreSubmitModal({
     if (isOpen) {
       const localUser = getLocalUser();
       setUser(localUser);
+      if (localUser?.country) {
+        setSelectedCountry(localUser.country);
+      }
       setIsSubmitted(false);
       setError('');
     }
@@ -50,15 +56,19 @@ export default function ScoreSubmitModal({
     setIsLoading(true);
     setError('');
 
-    // 등록/로그인
-    const registerResult = await registerOrLogin(nickname);
+    // 등록/로그인 (국가 정보 포함)
+    const registerResult = await registerOrLogin(nickname, selectedCountry);
     if (!registerResult.success) {
       setError(registerResult.error || '오류가 발생했습니다');
       setIsLoading(false);
       return;
     }
 
-    setUser({ id: registerResult.user!.id, nickname: registerResult.user!.nickname });
+    setUser({
+      id: registerResult.user!.id,
+      nickname: registerResult.user!.nickname,
+      country: selectedCountry
+    });
 
     // 점수 제출
     await doSubmitScore();
@@ -140,6 +150,42 @@ export default function ScoreSubmitModal({
               랭킹에 등록하려면 닉네임을 입력하세요
             </p>
 
+            {/* 국가 선택 */}
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => setShowCountrySelect(!showCountrySelect)}
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700 flex items-center justify-between"
+              >
+                <span className="flex items-center gap-2">
+                  <span className="text-xl">{getCountryByCode(selectedCountry)?.flag}</span>
+                  <span>{getCountryByCode(selectedCountry)?.nameKo}</span>
+                </span>
+                <span className="text-gray-400">▼</span>
+              </button>
+
+              {showCountrySelect && (
+                <div className="absolute z-10 mt-1 w-full max-h-48 overflow-y-auto bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg">
+                  {COUNTRIES.map((country) => (
+                    <button
+                      key={country.code}
+                      type="button"
+                      onClick={() => {
+                        setSelectedCountry(country.code);
+                        setShowCountrySelect(false);
+                      }}
+                      className={`w-full px-3 py-2 flex items-center gap-2 hover:bg-gray-100 dark:hover:bg-gray-700 ${
+                        selectedCountry === country.code ? 'bg-blue-50 dark:bg-blue-900/30' : ''
+                      }`}
+                    >
+                      <span className="text-xl">{country.flag}</span>
+                      <span>{country.nameKo}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+
             <input
               type="text"
               value={nickname}
@@ -174,6 +220,7 @@ export default function ScoreSubmitModal({
           /* 이미 로그인된 경우 */
           <div className="space-y-3">
             <div className="flex items-center justify-center gap-2 mb-2">
+              <span className="text-xl">{getCountryByCode(user.country || DEFAULT_COUNTRY_CODE)?.flag}</span>
               <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white font-bold text-sm">
                 {user.nickname[0].toUpperCase()}
               </div>

@@ -1,9 +1,16 @@
 import { supabase, User } from './supabase';
+import { DEFAULT_COUNTRY_CODE } from './data/countries';
 
 const USER_STORAGE_KEY = 'minigames-user';
 
+export type LocalUser = {
+  id: string;
+  nickname: string;
+  country?: string;
+};
+
 // 로컬 스토리지에서 사용자 정보 가져오기
-export function getLocalUser(): { id: string; nickname: string } | null {
+export function getLocalUser(): LocalUser | null {
   if (typeof window === 'undefined') return null;
 
   const stored = localStorage.getItem(USER_STORAGE_KEY);
@@ -17,7 +24,7 @@ export function getLocalUser(): { id: string; nickname: string } | null {
 }
 
 // 로컬 스토리지에 사용자 정보 저장
-export function setLocalUser(user: { id: string; nickname: string }) {
+export function setLocalUser(user: LocalUser) {
   if (typeof window === 'undefined') return;
   localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(user));
 }
@@ -30,7 +37,8 @@ export function clearLocalUser() {
 
 // 닉네임으로 회원가입/로그인
 export async function registerOrLogin(
-  nickname: string
+  nickname: string,
+  country: string = DEFAULT_COUNTRY_CODE
 ): Promise<{ success: boolean; user?: User; error?: string }> {
   // 닉네임 유효성 검사
   const trimmed = nickname.trim();
@@ -51,7 +59,7 @@ export async function registerOrLogin(
 
   if (existingUser) {
     // 기존 사용자로 로그인
-    setLocalUser({ id: existingUser.id, nickname: existingUser.nickname });
+    setLocalUser({ id: existingUser.id, nickname: existingUser.nickname, country });
     return { success: true, user: existingUser };
   }
 
@@ -70,7 +78,7 @@ export async function registerOrLogin(
     return { success: false, error: `등록 중 오류: ${insertError.message}` };
   }
 
-  setLocalUser({ id: newUser.id, nickname: newUser.nickname });
+  setLocalUser({ id: newUser.id, nickname: newUser.nickname, country });
   return { success: true, user: newUser };
 }
 

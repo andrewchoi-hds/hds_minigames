@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import KonamiCodeProvider from "@/components/KonamiCodeProvider";
 
 export const metadata: Metadata = {
   title: "Mini Games",
@@ -14,6 +15,7 @@ export default function RootLayout({
   return (
     <html lang="ko">
       <body className="antialiased">
+        <KonamiCodeProvider />
         {children}
       </body>
     </html>

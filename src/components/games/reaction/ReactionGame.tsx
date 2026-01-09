@@ -16,11 +16,24 @@ import { ScoreCalculator } from '@/lib/ranking';
 
 const ROUND_OPTIONS = [3, 5, 10];
 
+// 이스터에그: 특별 반응속도 메시지
+const getSpecialMessage = (time: number): { emoji: string; text: string } | null => {
+  if (time === 200) return { emoji: '🎯', text: 'PERFECT 200!' };
+  if (time === 100) return { emoji: '⚡', text: 'LIGHTNING!' };
+  if (time === 123) return { emoji: '🔢', text: '1-2-3!' };
+  if (time === 111) return { emoji: '🎰', text: 'JACKPOT!' };
+  if (time === 77) return { emoji: '🍀', text: 'LUCKY 77!' };
+  if (time < 100) return { emoji: '🤖', text: 'ARE YOU A ROBOT?' };
+  if (time < 150) return { emoji: '⚡', text: 'SUPERHUMAN!' };
+  return null;
+};
+
 export default function ReactionGame() {
   const [roundCount, setRoundCount] = useState(5);
   const [gameState, setGameState] = useState<GameState>(() => initGame(roundCount));
   const [bestRecord, setBestRecord] = useState<number>(0);
   const [showScoreModal, setShowScoreModal] = useState(false);
+  const [specialMessage, setSpecialMessage] = useState<{ emoji: string; text: string } | null>(null);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
 
   // 로컬 스토리지에서 최고 기록 로드
@@ -51,13 +64,23 @@ export default function ReactionGame() {
     }
   }, [gameState.phase, gameState.waitTime]);
 
-  // 결과 저장
+  // 결과 저장 및 이스터에그 체크
   useEffect(() => {
     if (gameState.phase === 'result') {
       const avg = getAverageTime(gameState.results);
       if (avg > 0 && (bestRecord === 0 || avg < bestRecord)) {
         setBestRecord(avg);
         localStorage.setItem('reaction-best', avg.toString());
+      }
+    }
+
+    // 이스터에그: 특별 반응속도 메시지
+    if (gameState.results.length > 0) {
+      const lastResult = gameState.results[gameState.results.length - 1];
+      const special = getSpecialMessage(lastResult.reactionTime);
+      if (special) {
+        setSpecialMessage(special);
+        setTimeout(() => setSpecialMessage(null), 2000);
       }
     }
   }, [gameState.phase, gameState.results, bestRecord]);
@@ -291,7 +314,7 @@ export default function ReactionGame() {
       {/* 메인 클릭 영역 */}
       <button
         onClick={onClick}
-        className={`w-full h-64 sm:h-80 rounded-2xl flex flex-col items-center justify-center transition-colors cursor-pointer ${phaseStyle.bg}`}
+        className={`w-full h-64 sm:h-80 rounded-2xl flex flex-col items-center justify-center transition-colors cursor-pointer ${phaseStyle.bg} relative overflow-hidden`}
       >
         <div className="text-4xl sm:text-5xl font-bold text-white mb-2">{phaseStyle.text}</div>
         {phaseStyle.subtext && (
@@ -302,6 +325,16 @@ export default function ReactionGame() {
         {gameState.phase === 'go' && gameState.results.length > 0 && (
           <div className="mt-4 text-white/60 text-sm">
             이전: {gameState.results[gameState.results.length - 1].reactionTime}ms
+          </div>
+        )}
+
+        {/* 이스터에그: 특별 메시지 */}
+        {specialMessage && (
+          <div className="absolute inset-0 flex items-center justify-center bg-black/50 animate-pulse">
+            <div className="text-center">
+              <div className="text-6xl mb-2">{specialMessage.emoji}</div>
+              <div className="text-2xl font-bold text-white">{specialMessage.text}</div>
+            </div>
           </div>
         )}
       </button>

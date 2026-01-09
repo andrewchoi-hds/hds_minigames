@@ -1,15 +1,18 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { getLocalUser, registerOrLogin, logout } from '@/lib/auth';
+import { getLocalUser, registerOrLogin, logout, LocalUser } from '@/lib/auth';
+import { COUNTRIES, getCountryByCode, DEFAULT_COUNTRY_CODE } from '@/lib/data/countries';
 
 type Props = {
-  onAuthChange?: (user: { id: string; nickname: string } | null) => void;
+  onAuthChange?: (user: LocalUser | null) => void;
 };
 
 export default function UserAuth({ onAuthChange }: Props) {
-  const [user, setUser] = useState<{ id: string; nickname: string } | null>(null);
+  const [user, setUser] = useState<LocalUser | null>(null);
   const [nickname, setNickname] = useState('');
+  const [selectedCountry, setSelectedCountry] = useState(DEFAULT_COUNTRY_CODE);
+  const [showCountrySelect, setShowCountrySelect] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [showForm, setShowForm] = useState(false);
@@ -31,12 +34,16 @@ export default function UserAuth({ onAuthChange }: Props) {
     setIsLoading(true);
     setError('');
 
-    const result = await registerOrLogin(nickname);
+    const result = await registerOrLogin(nickname, selectedCountry);
 
     setIsLoading(false);
 
     if (result.success && result.user) {
-      const userData = { id: result.user.id, nickname: result.user.nickname };
+      const userData: LocalUser = {
+        id: result.user.id,
+        nickname: result.user.nickname,
+        country: selectedCountry,
+      };
       setUser(userData);
       onAuthChange?.(userData);
       setShowForm(false);
@@ -57,6 +64,7 @@ export default function UserAuth({ onAuthChange }: Props) {
     return (
       <div className="flex items-center gap-3">
         <div className="flex items-center gap-2">
+          <span className="text-xl">{getCountryByCode(user.country || DEFAULT_COUNTRY_CODE)?.flag}</span>
           <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white font-bold text-sm">
             {user.nickname[0].toUpperCase()}
           </div>
@@ -90,16 +98,57 @@ export default function UserAuth({ onAuthChange }: Props) {
       <h3 className="font-semibold mb-3">닉네임으로 참여하기</h3>
 
       <div className="space-y-3">
-        <input
-          type="text"
-          value={nickname}
-          onChange={(e) => setNickname(e.target.value)}
-          onKeyDown={(e) => e.key === 'Enter' && handleRegister()}
-          placeholder="닉네임 (2~20자)"
-          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700 focus:border-blue-500 focus:outline-none"
-          maxLength={20}
-          disabled={isLoading}
-        />
+        {/* 국가 선택 */}
+        <div className="relative">
+          <label className="block text-sm text-gray-500 dark:text-gray-400 mb-1">국가</label>
+          <button
+            type="button"
+            onClick={() => setShowCountrySelect(!showCountrySelect)}
+            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700 flex items-center justify-between"
+          >
+            <span className="flex items-center gap-2">
+              <span className="text-xl">{getCountryByCode(selectedCountry)?.flag}</span>
+              <span>{getCountryByCode(selectedCountry)?.nameKo}</span>
+            </span>
+            <span className="text-gray-400">▼</span>
+          </button>
+
+          {showCountrySelect && (
+            <div className="absolute z-10 mt-1 w-full max-h-48 overflow-y-auto bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg">
+              {COUNTRIES.map((country) => (
+                <button
+                  key={country.code}
+                  type="button"
+                  onClick={() => {
+                    setSelectedCountry(country.code);
+                    setShowCountrySelect(false);
+                  }}
+                  className={`w-full px-3 py-2 flex items-center gap-2 hover:bg-gray-100 dark:hover:bg-gray-700 ${
+                    selectedCountry === country.code ? 'bg-blue-50 dark:bg-blue-900/30' : ''
+                  }`}
+                >
+                  <span className="text-xl">{country.flag}</span>
+                  <span>{country.nameKo}</span>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* 닉네임 입력 */}
+        <div>
+          <label className="block text-sm text-gray-500 dark:text-gray-400 mb-1">닉네임</label>
+          <input
+            type="text"
+            value={nickname}
+            onChange={(e) => setNickname(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && handleRegister()}
+            placeholder="2~20자"
+            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700 focus:border-blue-500 focus:outline-none"
+            maxLength={20}
+            disabled={isLoading}
+          />
+        </div>
 
         {error && <p className="text-red-500 text-sm">{error}</p>}
 
@@ -109,6 +158,7 @@ export default function UserAuth({ onAuthChange }: Props) {
               setShowForm(false);
               setError('');
               setNickname('');
+              setShowCountrySelect(false);
             }}
             className="flex-1 py-2 bg-gray-100 dark:bg-gray-700 rounded-lg font-medium hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
             disabled={isLoading}

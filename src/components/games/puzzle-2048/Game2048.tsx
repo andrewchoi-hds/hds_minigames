@@ -10,34 +10,37 @@ import {
   getTileFontSize,
 } from '@/lib/games/puzzle-2048';
 
-const STORAGE_KEY = '2048-best-score';
+const STORAGE_KEY_SCORE = '2048-best-score';
+const STORAGE_KEY_TILE = '2048-best-tile';
 
 export default function Game2048() {
   const [gameState, setGameState] = useState<GameState | null>(null);
   const [touchStart, setTouchStart] = useState<{ x: number; y: number } | null>(null);
-  const [showWinModal, setShowWinModal] = useState(false);
-  const [hasShownWin, setHasShownWin] = useState(false);
+  const [showMilestoneModal, setShowMilestoneModal] = useState<number | null>(null);
 
   // 초기화
   useEffect(() => {
-    const bestScore = parseInt(localStorage.getItem(STORAGE_KEY) || '0', 10);
-    setGameState(initGame(bestScore));
+    const bestScore = parseInt(localStorage.getItem(STORAGE_KEY_SCORE) || '0', 10);
+    const bestTile = parseInt(localStorage.getItem(STORAGE_KEY_TILE) || '0', 10);
+    setGameState(initGame(bestScore, bestTile));
   }, []);
 
-  // 최고 점수 저장
+  // 최고 점수/타일 저장
   useEffect(() => {
     if (gameState) {
-      localStorage.setItem(STORAGE_KEY, gameState.bestScore.toString());
+      localStorage.setItem(STORAGE_KEY_SCORE, gameState.bestScore.toString());
+      localStorage.setItem(STORAGE_KEY_TILE, gameState.bestTile.toString());
     }
-  }, [gameState?.bestScore]);
+  }, [gameState?.bestScore, gameState?.bestTile]);
 
-  // 승리 모달
+  // 마일스톤 달성 모달
   useEffect(() => {
-    if (gameState?.isWon && !hasShownWin) {
-      setShowWinModal(true);
-      setHasShownWin(true);
+    if (gameState?.milestoneReached) {
+      setShowMilestoneModal(gameState.milestoneReached);
+      // 마일스톤 표시 후 상태 리셋
+      setGameState(prev => prev ? { ...prev, milestoneReached: null } : prev);
     }
-  }, [gameState?.isWon, hasShownWin]);
+  }, [gameState?.milestoneReached]);
 
   // 키보드 입력
   const handleMove = useCallback((direction: Direction) => {
@@ -47,7 +50,7 @@ export default function Game2048() {
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (!gameState) return;
+      if (!gameState || showMilestoneModal) return;
 
       const keyMap: Record<string, Direction> = {
         ArrowUp: 'up',
@@ -69,7 +72,7 @@ export default function Game2048() {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [gameState, handleMove]);
+  }, [gameState, handleMove, showMilestoneModal]);
 
   // 터치 입력
   const handleTouchStart = (e: React.TouchEvent) => {
@@ -80,7 +83,7 @@ export default function Game2048() {
   };
 
   const handleTouchEnd = (e: React.TouchEvent) => {
-    if (!touchStart) return;
+    if (!touchStart || showMilestoneModal) return;
 
     const deltaX = e.changedTouches[0].clientX - touchStart.x;
     const deltaY = e.changedTouches[0].clientY - touchStart.y;
@@ -102,10 +105,13 @@ export default function Game2048() {
   // 새 게임
   const handleNewGame = () => {
     const bestScore = gameState?.bestScore || 0;
-    setGameState(initGame(bestScore));
-    setShowWinModal(false);
-    setHasShownWin(false);
+    const bestTile = gameState?.bestTile || 0;
+    setGameState(initGame(bestScore, bestTile));
+    setShowMilestoneModal(null);
   };
+
+  // 현재 최대 타일 값
+  const currentMaxTile = gameState ? Math.max(...gameState.tiles.map(t => t.value)) : 0;
 
   if (!gameState) {
     return (
@@ -122,7 +128,7 @@ export default function Game2048() {
         <div>
           <h2 className="text-4xl font-bold text-amber-600 dark:text-amber-500">2048</h2>
           <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-            타일을 합쳐 2048을 만드세요!
+            최고 타일: <span className="font-bold text-amber-600">{gameState.bestTile || '-'}</span>
           </p>
         </div>
         <div className="flex gap-2">
@@ -158,7 +164,7 @@ export default function Game2048() {
           {gameState.tiles.map(tile => {
             const { bg, text } = getTileColor(tile.value);
             const fontSize = getTileFontSize(tile.value);
-            const cellSize = 'calc((100% - 1.5rem) / 4)'; // gap 고려
+            const cellSize = 'calc((100% - 1.5rem) / 4)';
             const gapSize = '0.5rem';
 
             return (
@@ -177,6 +183,28 @@ export default function Game2048() {
             );
           })}
         </div>
+
+        {/* 게임 오버 오버레이 */}
+        {gameState.isGameOver && (
+          <div className="absolute inset-0 bg-black/60 flex items-center justify-center rounded-xl">
+            <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 text-center shadow-xl mx-4">
+              <div className="text-4xl mb-3">😢</div>
+              <h3 className="text-2xl font-bold mb-2">Game Over</h3>
+              <p className="text-gray-500 dark:text-gray-400 mb-1">
+                최종 점수: <span className="font-bold text-amber-600">{gameState.score}</span>
+              </p>
+              <p className="text-gray-500 dark:text-gray-400 mb-4">
+                최고 타일: <span className="font-bold text-amber-600">{currentMaxTile}</span>
+              </p>
+              <button
+                onClick={handleNewGame}
+                className="w-full py-3 bg-amber-500 hover:bg-amber-600 text-white rounded-xl font-medium transition-colors"
+              >
+                다시 하기
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* 컨트롤 */}
@@ -192,33 +220,18 @@ export default function Game2048() {
         </div>
       </div>
 
-      {/* 게임 오버 오버레이 */}
-      {gameState.isGameOver && (
-        <div className="absolute inset-0 bg-black/50 flex items-center justify-center rounded-xl">
-          <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 text-center shadow-xl mx-4">
-            <div className="text-4xl mb-3">😢</div>
-            <h3 className="text-2xl font-bold mb-2">Game Over</h3>
-            <p className="text-gray-500 dark:text-gray-400 mb-4">
-              최종 점수: <span className="font-bold text-amber-600">{gameState.score}</span>
-            </p>
-            <button
-              onClick={handleNewGame}
-              className="w-full py-3 bg-amber-500 hover:bg-amber-600 text-white rounded-xl font-medium transition-colors"
-            >
-              다시 하기
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* 승리 모달 */}
-      {showWinModal && (
+      {/* 마일스톤 달성 모달 */}
+      {showMilestoneModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 text-center shadow-xl max-w-sm w-full">
             <div className="text-5xl mb-3">🎉</div>
-            <h3 className="text-2xl font-bold mb-2">2048 달성!</h3>
+            <h3 className="text-3xl font-bold mb-2 text-amber-600">{showMilestoneModal}</h3>
             <p className="text-gray-500 dark:text-gray-400 mb-4">
-              축하합니다! 계속 플레이해서 더 높은 점수를 노려보세요!
+              {showMilestoneModal === 2048
+                ? '축하합니다! 2048을 달성했습니다!'
+                : `대단해요! ${showMilestoneModal} 타일을 만들었습니다!`}
+              <br />
+              <span className="text-sm">계속해서 더 높은 타일에 도전하세요!</span>
             </p>
             <div className="flex gap-3">
               <button
@@ -228,7 +241,7 @@ export default function Game2048() {
                 새 게임
               </button>
               <button
-                onClick={() => setShowWinModal(false)}
+                onClick={() => setShowMilestoneModal(null)}
                 className="flex-1 py-3 bg-amber-500 text-white rounded-xl font-medium hover:bg-amber-600 transition-colors"
               >
                 계속하기

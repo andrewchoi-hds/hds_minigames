@@ -15,8 +15,9 @@ export type GameState = {
   tiles: Tile[];
   score: number;
   bestScore: number;
+  bestTile: number;
   isGameOver: boolean;
-  isWon: boolean;
+  milestoneReached: number | null; // 새로 달성한 마일스톤 (2048, 4096, ...)
 };
 
 let tileIdCounter = 0;
@@ -76,8 +77,11 @@ export function addRandomTile(tiles: Tile[]): Tile[] {
   ];
 }
 
+// 마일스톤 목록 (축하할 타일 값)
+const MILESTONES = [2048, 4096, 8192, 16384, 32768, 65536, 131072];
+
 // 초기 게임 상태
-export function initGame(bestScore: number = 0): GameState {
+export function initGame(bestScore: number = 0, bestTile: number = 0): GameState {
   tileIdCounter = 0;
   let tiles: Tile[] = [];
   tiles = addRandomTile(tiles);
@@ -87,8 +91,9 @@ export function initGame(bestScore: number = 0): GameState {
     tiles,
     score: 0,
     bestScore,
+    bestTile,
     isGameOver: false,
-    isWon: false,
+    milestoneReached: null,
   };
 }
 
@@ -210,8 +215,17 @@ export function move(state: GameState, direction: Direction): GameState {
   const newScore = state.score + totalScore;
   const newBestScore = Math.max(state.bestScore, newScore);
 
-  // 2048 달성 확인
-  const isWon = tilesWithNew.some(t => t.value === 2048);
+  // 최고 타일 확인
+  const maxTileValue = Math.max(...tilesWithNew.map(t => t.value));
+  const newBestTile = Math.max(state.bestTile, maxTileValue);
+
+  // 새 마일스톤 달성 확인
+  let milestoneReached: number | null = null;
+  for (const milestone of MILESTONES) {
+    if (maxTileValue >= milestone && state.bestTile < milestone) {
+      milestoneReached = milestone;
+    }
+  }
 
   // 게임 오버 확인
   const isGameOver = checkGameOver(tilesWithNew);
@@ -220,8 +234,9 @@ export function move(state: GameState, direction: Direction): GameState {
     tiles: tilesWithNew,
     score: newScore,
     bestScore: newBestScore,
+    bestTile: newBestTile,
     isGameOver,
-    isWon: state.isWon || isWon,
+    milestoneReached,
   };
 }
 
@@ -283,14 +298,22 @@ export function getTileColor(value: number): { bg: string; text: string } {
     512: { bg: 'bg-yellow-600', text: 'text-white' },
     1024: { bg: 'bg-amber-500', text: 'text-white' },
     2048: { bg: 'bg-amber-600', text: 'text-white' },
+    4096: { bg: 'bg-rose-500', text: 'text-white' },
+    8192: { bg: 'bg-rose-600', text: 'text-white' },
+    16384: { bg: 'bg-purple-500', text: 'text-white' },
+    32768: { bg: 'bg-purple-600', text: 'text-white' },
+    65536: { bg: 'bg-indigo-500', text: 'text-white' },
+    131072: { bg: 'bg-indigo-600', text: 'text-white' },
   };
 
-  return colors[value] || { bg: 'bg-amber-700', text: 'text-white' };
+  return colors[value] || { bg: 'bg-gray-800', text: 'text-white' };
 }
 
 // 타일 폰트 크기
 export function getTileFontSize(value: number): string {
   if (value < 100) return 'text-3xl sm:text-4xl';
   if (value < 1000) return 'text-2xl sm:text-3xl';
-  return 'text-xl sm:text-2xl';
+  if (value < 10000) return 'text-xl sm:text-2xl';
+  if (value < 100000) return 'text-lg sm:text-xl';
+  return 'text-base sm:text-lg';
 }

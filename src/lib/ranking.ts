@@ -157,6 +157,12 @@ export const ScoreCalculator = {
     return Math.max(0, Math.round(weight * 10000 - timeSeconds * 10 - hintsUsed * 500));
   },
 
+  // 2048: 게임 점수 그대로 사용 + 최고 타일 보너스
+  puzzle2048: (score: number, maxTile: number): number => {
+    const tileBonus = maxTile >= 2048 ? 5000 : maxTile >= 1024 ? 2000 : maxTile >= 512 ? 500 : 0;
+    return score + tileBonus;
+  },
+
   // 메모리 게임: (난이도 기본점수) - (추가 시도 × 50) - (소요시간 × 5)
   memory: (difficulty: string, attempts: number, timeSeconds: number): number => {
     const config: Record<string, { baseScore: number; minAttempts: number }> = {
@@ -214,5 +220,28 @@ export const ScoreCalculator = {
     const attemptScore = Math.max(0, (20 - attempts) * 500);
     const timeBonus = Math.max(0, 300 - timeSeconds);
     return attemptScore + timeBonus + digitBonus;
+  },
+
+  // 플래피 버드: 파이프 통과 × 100
+  flappy: (pipesCleared: number): number => {
+    return pipesCleared * 100;
+  },
+
+  // 뱀 게임: 사과 × 100 + (길이 - 3) × 50
+  snake: (applesEaten: number, snakeLength: number): number => {
+    return applesEaten * 100 + (snakeLength - 3) * 50;
+  },
+
+  // 벽돌깨기: 점수 + 콤보 보너스
+  breakout: (score: number, bricksCleared: number, maxCombo: number): number => {
+    const comboBonus = maxCombo * 50;
+    return score + comboBonus;
+  },
+
+  // 색상 맞추기: 점수 + 라운드 보너스 + 연속 정답 보너스
+  colorMatch: (score: number, rounds: number, maxStreak: number): number => {
+    const roundBonus = rounds * 10;
+    const streakBonus = maxStreak * 50;
+    return score + roundBonus + streakBonus;
   },
 };

@@ -10,6 +10,8 @@ import {
   isBoardComplete,
   solvePuzzle,
   getHint,
+  getCompletedNumbers,
+  MISTAKES_LIMIT,
 } from '@/lib/games/sudoku';
 import SudokuBoard from './SudokuBoard';
 import NumberPad from './NumberPad';
@@ -52,6 +54,9 @@ export default function SudokuGame() {
   const [isPaused, setIsPaused] = useState(false);
   const [showScoreModal, setShowScoreModal] = useState(false);
   const [hintsUsed, setHintsUsed] = useState(0);
+  const [mistakes, setMistakes] = useState(0);
+  const [isGameOver, setIsGameOver] = useState(false);
+  const [completedNumbers, setCompletedNumbers] = useState<Set<number>>(new Set());
 
   // 새 게임 시작
   const startNewGame = useCallback((diff: Difficulty) => {
@@ -73,6 +78,9 @@ export default function SudokuGame() {
     setShowNewGameConfirm(null);
     setIsPaused(false);
     setHintsUsed(0);
+    setMistakes(0);
+    setIsGameOver(false);
+    setCompletedNumbers(getCompletedNumbers(newBoard));
   }, []);
 
   // 타이머
@@ -109,17 +117,17 @@ export default function SudokuGame() {
 
   // 숫자 입력
   const handleNumberInput = (num: number) => {
-    if (!selectedCell || !board) return;
+    if (!selectedCell || !board || !solution || isGameOver) return;
     const { row, col } = selectedCell;
     const cell = board[row][col];
 
-    if (cell.isFixed) return;
+    // 고정된 셀이나 이미 정답으로 잠긴 셀은 수정 불가
+    if (cell.isFixed || cell.isLocked) return;
 
-    setHistory(prev => [...prev, copyBoard(board)]);
-
-    const newBoard = copyBoard(board);
-
+    // 메모 모드
     if (isNoteMode) {
+      setHistory(prev => [...prev, copyBoard(board)]);
+      const newBoard = copyBoard(board);
       const notes = new Set(newBoard[row][col].notes);
       if (notes.has(num)) {
         notes.delete(num);
@@ -128,23 +136,45 @@ export default function SudokuGame() {
       }
       newBoard[row][col].notes = notes;
       newBoard[row][col].value = 0;
-    } else {
-      newBoard[row][col].value = num;
-      newBoard[row][col].notes = new Set();
+      setBoard(newBoard);
+      return;
+    }
 
-      const newErrors = new Set<string>();
-      for (let r = 0; r < 9; r++) {
-        for (let c = 0; c < 9; c++) {
-          const v = newBoard[r][c].value;
-          if (v !== 0 && !isValidPlacement(newBoard, r, c, v)) {
-            newErrors.add(`${r}-${c}`);
-          }
-        }
-      }
-      setErrorCells(newErrors);
+    // 일반 숫자 입력 - 정답 확인
+    const correctValue = solution[row][col].value;
+    const isCorrect = num === correctValue;
 
-      if (newErrors.size === 0 && isBoardComplete(newBoard)) {
+    setHistory(prev => [...prev, copyBoard(board)]);
+    const newBoard = copyBoard(board);
+    newBoard[row][col].value = num;
+    newBoard[row][col].notes = new Set();
+
+    if (isCorrect) {
+      // 정답! 셀을 잠금
+      newBoard[row][col].isLocked = true;
+      setErrorCells(prev => {
+        const newErrors = new Set(prev);
+        newErrors.delete(`${row}-${col}`);
+        return newErrors;
+      });
+
+      // 완료된 숫자 업데이트
+      setCompletedNumbers(getCompletedNumbers(newBoard));
+
+      // 게임 완료 확인
+      if (isBoardComplete(newBoard)) {
         setIsComplete(true);
+        setIsRunning(false);
+      }
+    } else {
+      // 오답! 실수 카운트 증가
+      const newMistakes = mistakes + 1;
+      setMistakes(newMistakes);
+      setErrorCells(prev => new Set([...prev, `${row}-${col}`]));
+
+      // 실패 횟수 초과 시 게임 오버
+      if (newMistakes >= MISTAKES_LIMIT[difficulty]) {
+        setIsGameOver(true);
         setIsRunning(false);
       }
     }
@@ -154,11 +184,12 @@ export default function SudokuGame() {
 
   // 지우기
   const handleClear = () => {
-    if (!selectedCell || !board) return;
+    if (!selectedCell || !board || isGameOver) return;
     const { row, col } = selectedCell;
     const cell = board[row][col];
 
-    if (cell.isFixed) return;
+    // 고정된 셀이나 잠긴 셀은 지울 수 없음
+    if (cell.isFixed || cell.isLocked) return;
 
     setHistory(prev => [...prev, copyBoard(board)]);
 
@@ -167,16 +198,12 @@ export default function SudokuGame() {
     newBoard[row][col].notes = new Set();
     setBoard(newBoard);
 
-    const newErrors = new Set<string>();
-    for (let r = 0; r < 9; r++) {
-      for (let c = 0; c < 9; c++) {
-        const v = newBoard[r][c].value;
-        if (v !== 0 && !isValidPlacement(newBoard, r, c, v)) {
-          newErrors.add(`${r}-${c}`);
-        }
-      }
-    }
-    setErrorCells(newErrors);
+    // 에러 목록에서 해당 셀 제거
+    setErrorCells(prev => {
+      const newErrors = new Set(prev);
+      newErrors.delete(`${row}-${col}`);
+      return newErrors;
+    });
   };
 
   // 실행취소
@@ -202,7 +229,7 @@ export default function SudokuGame() {
 
   // 힌트
   const handleHint = () => {
-    if (!board || !solution || hintsRemaining === 0) return;
+    if (!board || !solution || hintsRemaining === 0 || isGameOver) return;
 
     const hint = getHint(board, solution);
     if (!hint) return;
@@ -212,10 +239,12 @@ export default function SudokuGame() {
     const newBoard = copyBoard(board);
     newBoard[hint.row][hint.col].value = hint.value;
     newBoard[hint.row][hint.col].notes = new Set();
+    newBoard[hint.row][hint.col].isLocked = true; // 힌트로 채운 셀도 잠금
     setBoard(newBoard);
     setHintsRemaining(prev => prev - 1);
     setHintsUsed(prev => prev + 1);
     setSelectedCell({ row: hint.row, col: hint.col });
+    setCompletedNumbers(getCompletedNumbers(newBoard));
 
     if (isBoardComplete(newBoard)) {
       setIsComplete(true);
@@ -320,6 +349,23 @@ export default function SudokuGame() {
         />
       </div>
 
+      {/* 실패 횟수 표시 */}
+      <div className="flex justify-center gap-1 mb-4">
+        {Array.from({ length: MISTAKES_LIMIT[difficulty] }).map((_, i) => (
+          <div
+            key={i}
+            className={`w-3 h-3 rounded-full transition-colors ${
+              i < mistakes
+                ? 'bg-red-500'
+                : 'bg-gray-200 dark:bg-gray-700'
+            }`}
+          />
+        ))}
+        <span className="ml-2 text-xs text-gray-500 dark:text-gray-400">
+          {mistakes}/{MISTAKES_LIMIT[difficulty]} 실패
+        </span>
+      </div>
+
       {/* 숫자 패드 */}
       <div className="bg-white dark:bg-gray-800 rounded-xl p-3 shadow-sm">
         <NumberPad
@@ -330,6 +376,7 @@ export default function SudokuGame() {
           onNoteModeToggle={() => setIsNoteMode(prev => !prev)}
           onHint={handleHint}
           hintsRemaining={hintsRemaining}
+          completedNumbers={completedNumbers}
         />
       </div>
 
@@ -405,6 +452,37 @@ export default function SudokuGame() {
                 className="flex-1 py-3 bg-blue-500 text-white rounded-xl font-medium hover:bg-blue-600 transition-colors"
               >
                 시작하기
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 게임 오버 모달 */}
+      {isGameOver && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 w-full max-w-sm shadow-xl text-center">
+            <div className="text-5xl mb-4">💔</div>
+            <h2 className="text-2xl font-bold mb-2 text-red-500">게임 오버</h2>
+            <p className="text-gray-500 dark:text-gray-400 mb-2">
+              <span className={`inline-block px-2 py-0.5 rounded text-white text-sm font-medium ${DIFFICULTY_CONFIG[difficulty].color}`}>
+                {DIFFICULTY_CONFIG[difficulty].label}
+              </span>
+              {' '}난이도에서 {MISTAKES_LIMIT[difficulty]}회 실패했습니다.
+            </p>
+            <p className="text-lg font-mono mb-4">진행 시간: {formatTime(timer)}</p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setGameState('select')}
+                className="flex-1 py-3 bg-gray-100 dark:bg-gray-700 rounded-xl font-medium hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+              >
+                난이도 선택
+              </button>
+              <button
+                onClick={() => startNewGame(difficulty)}
+                className="flex-1 py-3 bg-blue-500 text-white rounded-xl font-medium hover:bg-blue-600 transition-colors"
+              >
+                다시 도전
               </button>
             </div>
           </div>

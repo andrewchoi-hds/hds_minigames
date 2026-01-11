@@ -8,6 +8,7 @@ type Props = {
   onNoteModeToggle: () => void;
   onHint: () => void;
   hintsRemaining: number;
+  completedNumbers?: Set<number>; // 9개 모두 사용된 숫자들
 };
 
 export default function NumberPad({
@@ -18,20 +19,29 @@ export default function NumberPad({
   onNoteModeToggle,
   onHint,
   hintsRemaining,
+  completedNumbers = new Set(),
 }: Props) {
   return (
     <div className="w-full">
       {/* 숫자 패드 */}
       <div className="grid grid-cols-9 gap-1.5 mb-4">
-        {[1, 2, 3, 4, 5, 6, 7, 8, 9].map(num => (
-          <button
-            key={num}
-            onClick={() => onNumberClick(num)}
-            className="aspect-square text-xl font-semibold bg-gray-50 dark:bg-gray-700 hover:bg-blue-100 dark:hover:bg-blue-900/50 active:bg-blue-200 dark:active:bg-blue-800 rounded-xl transition-all duration-150 shadow-sm hover:shadow"
-          >
-            {num}
-          </button>
-        ))}
+        {[1, 2, 3, 4, 5, 6, 7, 8, 9].map(num => {
+          const isCompleted = completedNumbers.has(num);
+          return (
+            <button
+              key={num}
+              onClick={() => !isCompleted && onNumberClick(num)}
+              disabled={isCompleted}
+              className={`aspect-square text-xl font-semibold rounded-xl transition-all duration-150 ${
+                isCompleted
+                  ? 'bg-gray-200 dark:bg-gray-800 text-gray-300 dark:text-gray-600 cursor-not-allowed'
+                  : 'bg-gray-50 dark:bg-gray-700 hover:bg-blue-100 dark:hover:bg-blue-900/50 active:bg-blue-200 dark:active:bg-blue-800 shadow-sm hover:shadow'
+              }`}
+            >
+              {isCompleted ? '' : num}
+            </button>
+          );
+        })}
       </div>
 
       {/* 컨트롤 버튼 */}

@@ -61,6 +61,30 @@ const games = [
     description: '숫자를 추리하여 정답을 맞추세요',
     emoji: '⚾',
   },
+  {
+    id: 'flappy',
+    name: '플래피 버드',
+    description: '파이프 사이를 날아서 통과하세요',
+    emoji: '🐦',
+  },
+  {
+    id: 'snake',
+    name: '뱀 게임',
+    description: '사과를 먹으며 뱀을 키우세요',
+    emoji: '🐍',
+  },
+  {
+    id: 'breakout',
+    name: '벽돌깨기',
+    description: '공을 튕겨 벽돌을 모두 깨세요',
+    emoji: '🧱',
+  },
+  {
+    id: 'color-match',
+    name: '색상 맞추기',
+    description: '스트룹 효과를 경험해보세요',
+    emoji: '🎨',
+  },
 ];
 
 export default function Home() {

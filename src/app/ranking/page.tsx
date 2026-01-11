@@ -16,6 +16,10 @@ const GAMES: { type: GameType; emoji: string; difficulties?: string[] }[] = [
   { type: 'typing', emoji: '⌨️', difficulties: ['easy', 'normal', 'hard'] },
   { type: 'reaction', emoji: '⚡' },
   { type: 'baseball', emoji: '⚾', difficulties: ['3digit', '4digit'] },
+  { type: 'flappy', emoji: '🐦' },
+  { type: 'snake', emoji: '🐍' },
+  { type: 'breakout', emoji: '🧱' },
+  { type: 'color-match', emoji: '🎨' },
 ];
 
 export default function RankingPage() {

@@ -5,6 +5,7 @@ export type Difficulty = 'normal' | 'hard' | 'expert' | 'master' | 'extreme';
 export type Cell = {
   value: number; // 0 = empty, 1-9 = filled
   isFixed: boolean; // 초기 주어진 숫자인지
+  isLocked: boolean; // 정답을 맞춰서 잠긴 셀인지
   notes: Set<number>; // 메모 (1-9)
 };
 
@@ -19,15 +20,51 @@ const DIFFICULTY_BLANKS: Record<Difficulty, [number, number]> = {
   extreme: [58, 64],
 };
 
+// 난이도별 실패 허용 횟수
+export const MISTAKES_LIMIT: Record<Difficulty, number> = {
+  normal: 5,
+  hard: 4,
+  expert: 3,
+  master: 2,
+  extreme: 1,
+};
+
 // 빈 보드 생성
 export function createEmptyBoard(): Board {
   return Array(9).fill(null).map(() =>
     Array(9).fill(null).map(() => ({
       value: 0,
       isFixed: false,
+      isLocked: false,
       notes: new Set<number>(),
     }))
   );
+}
+
+// 각 숫자별 사용 횟수 계산
+export function getNumberCounts(board: Board): Record<number, number> {
+  const counts: Record<number, number> = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0, 7: 0, 8: 0, 9: 0 };
+  for (let r = 0; r < 9; r++) {
+    for (let c = 0; c < 9; c++) {
+      const val = board[r][c].value;
+      if (val >= 1 && val <= 9) {
+        counts[val]++;
+      }
+    }
+  }
+  return counts;
+}
+
+// 완료된 숫자 목록 (9개 모두 사용된 숫자)
+export function getCompletedNumbers(board: Board): Set<number> {
+  const counts = getNumberCounts(board);
+  const completed = new Set<number>();
+  for (let num = 1; num <= 9; num++) {
+    if (counts[num] >= 9) {
+      completed.add(num);
+    }
+  }
+  return completed;
 }
 
 // 특정 위치에 숫자가 유효한지 확인
@@ -188,6 +225,7 @@ export function generatePuzzle(difficulty: Difficulty): Board {
     row.map(value => ({
       value,
       isFixed: value !== 0,
+      isLocked: value !== 0, // 초기 숫자도 잠김 상태
       notes: new Set<number>(),
     }))
   );
@@ -209,7 +247,9 @@ export function isBoardComplete(board: Board): boolean {
 export function copyBoard(board: Board): Board {
   return board.map(row =>
     row.map(cell => ({
-      ...cell,
+      value: cell.value,
+      isFixed: cell.isFixed,
+      isLocked: cell.isLocked,
       notes: new Set(cell.notes),
     }))
   );
@@ -264,6 +304,7 @@ export function solvePuzzle(board: Board): Board | null {
     row.map(value => ({
       value,
       isFixed: true,
+      isLocked: true,
       notes: new Set<number>(),
     }))
   );

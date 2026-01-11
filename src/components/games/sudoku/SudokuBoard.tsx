@@ -50,6 +50,9 @@ export default function SudokuBoard({ board, selectedCell, onCellClick, errorCel
         classes.push('text-red-600 dark:text-red-400');
       } else if (cell.isFixed) {
         classes.push('text-gray-800 dark:text-gray-100');
+      } else if (cell.isLocked) {
+        // 정답으로 맞춘 셀 - 초록색으로 표시
+        classes.push('text-green-600 dark:text-green-400');
       } else if (cell.value !== 0) {
         classes.push('text-blue-600 dark:text-blue-400');
       }

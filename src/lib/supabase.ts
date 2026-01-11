@@ -16,6 +16,7 @@ export const isSupabaseConfigured = Boolean(supabaseUrl && supabaseAnonKey);
 export type User = {
   id: string;
   nickname: string;
+  country?: string;
   created_at: string;
 };
 
@@ -34,6 +35,7 @@ export type RankingEntry = {
   rank: number;
   user_id: string;
   nickname: string;
+  country?: string;
   score: number;
   time_seconds: number | null;
   created_at: string;
@@ -49,7 +51,11 @@ export type GameType =
   | 'sliding-puzzle'
   | 'typing'
   | 'reaction'
-  | 'baseball';
+  | 'baseball'
+  | 'flappy'
+  | 'snake'
+  | 'breakout'
+  | 'color-match';
 
 // 게임별 표시 이름
 export const GAME_NAMES: Record<GameType, string> = {
@@ -62,4 +68,8 @@ export const GAME_NAMES: Record<GameType, string> = {
   typing: '타이핑 게임',
   reaction: '반응속도 테스트',
   baseball: '숫자 야구',
+  flappy: '플래피 버드',
+  snake: '뱀 게임',
+  breakout: '벽돌깨기',
+  'color-match': '색상 맞추기',
 };

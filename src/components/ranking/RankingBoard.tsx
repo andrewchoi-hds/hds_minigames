@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { getRanking, getMyRank, Period } from '@/lib/ranking';
 import { GameType, GAME_NAMES, RankingEntry } from '@/lib/supabase';
 import { getLocalUser } from '@/lib/auth';
+import { getCountryByCode, DEFAULT_COUNTRY_CODE } from '@/lib/data/countries';
 
 type Props = {
   gameType: GameType;
@@ -157,7 +158,8 @@ export default function RankingBoard({
                           </span>
                         </td>
                         <td className="px-4 py-3">
-                          <span className={isMe ? 'font-bold text-blue-500' : ''}>
+                          <span className={`flex items-center gap-2 ${isMe ? 'font-bold text-blue-500' : ''}`}>
+                            <span className="text-lg">{getCountryByCode(entry.country || DEFAULT_COUNTRY_CODE)?.flag}</span>
                             {entry.nickname}
                             {isMe && ' (나)'}
                           </span>

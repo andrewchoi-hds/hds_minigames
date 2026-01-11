@@ -58,15 +58,20 @@ export async function registerOrLogin(
     .single();
 
   if (existingUser) {
-    // 기존 사용자로 로그인
+    // 기존 사용자로 로그인 - 국가 정보 업데이트
+    await supabase
+      .from('users')
+      .update({ country })
+      .eq('id', existingUser.id);
+
     setLocalUser({ id: existingUser.id, nickname: existingUser.nickname, country });
-    return { success: true, user: existingUser };
+    return { success: true, user: { ...existingUser, country } };
   }
 
-  // 새 사용자 생성
+  // 새 사용자 생성 (국가 정보 포함)
   const { data: newUser, error: insertError } = await supabase
     .from('users')
-    .insert({ nickname: trimmed })
+    .insert({ nickname: trimmed, country })
     .select()
     .single();
 

@@ -5,8 +5,12 @@
 CREATE TABLE IF NOT EXISTS users (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   nickname VARCHAR(20) NOT NULL UNIQUE,
+  country VARCHAR(5) DEFAULT 'KR',
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
+
+-- 기존 테이블에 country 컬럼 추가 (테이블이 이미 있는 경우)
+-- ALTER TABLE users ADD COLUMN IF NOT EXISTS country VARCHAR(5) DEFAULT 'KR';
 
 -- 2. 게임 점수 테이블
 CREATE TABLE IF NOT EXISTS scores (
@@ -46,7 +50,7 @@ CREATE POLICY "Scores are viewable by everyone" ON scores
 CREATE POLICY "Anyone can insert scores" ON scores
   FOR INSERT WITH CHECK (true);
 
--- 5. 랭킹 조회 함수
+-- 5. 랭킹 조회 함수 (국가 정보 포함)
 CREATE OR REPLACE FUNCTION get_ranking(
   p_game_type VARCHAR,
   p_difficulty VARCHAR DEFAULT NULL,
@@ -57,6 +61,7 @@ RETURNS TABLE (
   rank BIGINT,
   user_id UUID,
   nickname VARCHAR,
+  country VARCHAR,
   score INTEGER,
   time_seconds INTEGER,
   created_at TIMESTAMP WITH TIME ZONE
@@ -95,6 +100,7 @@ BEGIN
     ROW_NUMBER() OVER (ORDER BY bs.best_score DESC, bs.best_time ASC) as rank,
     bs.user_id,
     u.nickname,
+    COALESCE(u.country, 'KR') as country,
     bs.best_score as score,
     bs.best_time as time_seconds,
     bs.last_played as created_at

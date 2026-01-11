@@ -9,6 +9,8 @@ import {
   getTileColor,
   getTileFontSize,
 } from '@/lib/games/puzzle-2048';
+import ScoreSubmitModal from '@/components/ranking/ScoreSubmitModal';
+import { ScoreCalculator } from '@/lib/ranking';
 
 const STORAGE_KEY_SCORE = '2048-best-score';
 const STORAGE_KEY_TILE = '2048-best-tile';
@@ -17,6 +19,7 @@ export default function Game2048() {
   const [gameState, setGameState] = useState<GameState | null>(null);
   const [touchStart, setTouchStart] = useState<{ x: number; y: number } | null>(null);
   const [showMilestoneModal, setShowMilestoneModal] = useState<number | null>(null);
+  const [showScoreModal, setShowScoreModal] = useState(false);
 
   // 초기화
   useEffect(() => {
@@ -209,15 +212,29 @@ export default function Game2048() {
               <p className="text-gray-500 dark:text-gray-400 mb-1">
                 최종 점수: <span className="font-bold text-amber-600">{gameState.score}</span>
               </p>
-              <p className="text-gray-500 dark:text-gray-400 mb-4">
+              <p className="text-gray-500 dark:text-gray-400 mb-2">
                 최고 타일: <span className="font-bold text-amber-600">{currentMaxTile}</span>
               </p>
-              <button
-                onClick={handleNewGame}
-                className="w-full py-3 bg-amber-500 hover:bg-amber-600 text-white rounded-xl font-medium transition-colors"
-              >
-                다시 하기
-              </button>
+              <div className="bg-amber-50 dark:bg-amber-900/30 rounded-xl p-3 mb-4">
+                <div className="text-sm text-gray-500 dark:text-gray-400">랭킹 점수</div>
+                <div className="text-xl font-bold text-amber-600">
+                  {ScoreCalculator.puzzle2048(gameState.score, currentMaxTile).toLocaleString()}점
+                </div>
+              </div>
+              <div className="flex gap-2">
+                <button
+                  onClick={handleNewGame}
+                  className="flex-1 py-3 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-xl font-medium transition-colors"
+                >
+                  다시 하기
+                </button>
+                <button
+                  onClick={() => setShowScoreModal(true)}
+                  className="flex-1 py-3 bg-amber-500 hover:bg-amber-600 text-white rounded-xl font-medium transition-colors"
+                >
+                  랭킹 등록
+                </button>
+              </div>
             </div>
           </div>
         )}
@@ -266,6 +283,15 @@ export default function Game2048() {
           </div>
         </div>
       )}
+
+      {/* 점수 제출 모달 */}
+      <ScoreSubmitModal
+        isOpen={showScoreModal}
+        onClose={() => setShowScoreModal(false)}
+        gameType="puzzle2048"
+        score={ScoreCalculator.puzzle2048(gameState.score, currentMaxTile)}
+        metadata={{ score: gameState.score, maxTile: currentMaxTile }}
+      />
     </div>
   );
 }

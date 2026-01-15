@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { getRanking } from '@/lib/ranking';
 import { GameType, RankingEntry } from '@/lib/supabase';
 import { getCountryByCode, DEFAULT_COUNTRY_CODE } from '@/lib/data/countries';
+import { MiniRankingSkeleton } from '@/components/ui/Skeleton';
 
 type Props = {
   gameType: GameType;
@@ -38,11 +39,7 @@ export default function MiniRanking({ gameType, difficulty }: Props) {
   };
 
   if (isLoading) {
-    return (
-      <div className="flex items-center justify-center py-4">
-        <div className="w-5 h-5 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
-      </div>
-    );
+    return <MiniRankingSkeleton />;
   }
 
   if (ranking.length === 0) {

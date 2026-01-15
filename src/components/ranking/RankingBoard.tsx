@@ -5,6 +5,7 @@ import { getRanking, getMyRank, Period } from '@/lib/ranking';
 import { GameType, GAME_NAMES, RankingEntry } from '@/lib/supabase';
 import { getLocalUser } from '@/lib/auth';
 import { getCountryByCode, DEFAULT_COUNTRY_CODE } from '@/lib/data/countries';
+import { RankingRowSkeleton } from '@/components/ui/Skeleton';
 
 type Props = {
   gameType: GameType;
@@ -106,8 +107,10 @@ export default function RankingBoard({
 
       {/* 로딩 */}
       {isLoading && (
-        <div className="p-8 text-center">
-          <div className="animate-spin w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full mx-auto" />
+        <div className="divide-y divide-gray-100 dark:divide-gray-700">
+          {Array.from({ length: 5 }).map((_, i) => (
+            <RankingRowSkeleton key={i} />
+          ))}
         </div>
       )}
 

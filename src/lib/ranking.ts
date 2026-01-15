@@ -29,7 +29,6 @@ export async function submitScore(params: {
   const { error } = await supabase.from('scores').insert(insertData).select();
 
   if (error) {
-    console.error('Score submit error:', error);
     return { success: false, error: `점수 제출 중 오류: ${error.message}` };
   }
 
@@ -51,7 +50,6 @@ export async function getRanking(params: {
   });
 
   if (error) {
-    console.error('Ranking fetch error:', error);
     return { data: [], error: '랭킹 조회 중 오류가 발생했습니다' };
   }
 
@@ -75,7 +73,6 @@ export async function getMyRank(params: {
   });
 
   if (error) {
-    console.error('My rank fetch error:', error);
     return 0;
   }
 
@@ -106,7 +103,6 @@ export async function getMyScores(params: {
   const { data, error } = await query;
 
   if (error) {
-    console.error('My scores fetch error:', error);
     return { data: [], error: '기록 조회 중 오류가 발생했습니다' };
   }
 

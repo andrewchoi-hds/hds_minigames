@@ -67,8 +67,7 @@ export async function copyToClipboard(text: string): Promise<boolean> {
     document.execCommand('copy');
     document.body.removeChild(textArea);
     return true;
-  } catch (error) {
-    console.error('Failed to copy:', error);
+  } catch {
     return false;
   }
 }

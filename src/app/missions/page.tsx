@@ -47,38 +47,38 @@ export default function MissionsPage() {
 
   return (
     <div className="min-h-screen bg-gray-100 dark:bg-gray-900">
-      <div className="max-w-lg mx-auto">
+      <div className="max-w-lg mx-auto px-4">
         {/* 헤더 */}
-        <div className="bg-gradient-to-br from-blue-500 to-purple-600 text-white">
-        <div className="px-4 py-3 flex items-center justify-between">
-          <Link
-            href="/"
-            className="flex items-center gap-1 text-white/80 hover:text-white transition-colors"
-          >
-            <ChevronLeft size={20} />
-          </Link>
-          <h1 className="text-lg font-bold">미션</h1>
-          <div className="w-5" />
-        </div>
+        <div className="bg-gradient-to-br from-blue-500 to-purple-600 text-white rounded-2xl mt-4 shadow-lg">
+          <div className="px-4 py-3 flex items-center justify-between">
+            <Link
+              href="/"
+              className="flex items-center gap-1 text-white/80 hover:text-white transition-colors"
+            >
+              <ChevronLeft size={20} />
+            </Link>
+            <h1 className="text-lg font-bold">미션</h1>
+            <div className="w-5" />
+          </div>
 
-        {/* 포인트 */}
-        <div className="px-4 pb-6 pt-2">
-          <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-white/70 text-sm">내 포인트</p>
-                <p className="text-3xl font-bold">{points.toLocaleString()}P</p>
-              </div>
-              <div className="w-14 h-14 bg-white/20 rounded-2xl flex items-center justify-center">
-                <Gift size={28} />
+          {/* 포인트 */}
+          <div className="px-4 pb-4">
+            <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-white/70 text-sm">내 포인트</p>
+                  <p className="text-3xl font-bold">{points.toLocaleString()}P</p>
+                </div>
+                <div className="w-14 h-14 bg-white/20 rounded-2xl flex items-center justify-center">
+                  <Gift size={28} />
+                </div>
               </div>
             </div>
           </div>
         </div>
-      </div>
 
-      {/* 탭 */}
-      <div className="bg-white dark:bg-gray-800 px-4 py-2 border-b border-gray-200 dark:border-gray-700 sticky top-0 z-10">
+        {/* 탭 */}
+        <div className="bg-white dark:bg-gray-800 px-4 py-2 rounded-2xl mt-4 shadow-sm">
         <div className="flex gap-2">
           <button
             onClick={() => setActiveTab('daily')}
@@ -107,10 +107,10 @@ export default function MissionsPage() {
             주간 미션
           </button>
         </div>
-      </div>
+        </div>
 
-      {/* 미션 목록 */}
-      <div className="p-4">
+        {/* 미션 목록 */}
+        <div className="py-4">
         {/* 진행 상황 */}
         <div className="mb-4 flex items-center justify-between text-sm">
           <span className="text-gray-600 dark:text-gray-400">

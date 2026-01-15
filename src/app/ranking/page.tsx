@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import { ChevronLeft } from 'lucide-react';
 import RankingBoard from '@/components/ranking/RankingBoard';
 import UserAuth from '@/components/ranking/UserAuth';
 import { GameType, GAME_NAMES } from '@/lib/supabase';
@@ -29,22 +30,27 @@ export default function RankingPage() {
   const currentGame = GAMES.find((g) => g.type === selectedGame);
 
   return (
-    <main className="min-h-screen p-4 sm:p-8">
-      <div className="max-w-4xl mx-auto">
-        {/* 헤더 */}
-        <div className="flex items-center justify-between mb-6">
+    <main className="min-h-screen bg-gray-100 dark:bg-gray-900 flex flex-col">
+      {/* 헤더 */}
+      <div className="max-w-lg mx-auto w-full px-4 pt-4">
+        <div className="bg-white dark:bg-gray-800 shadow-sm rounded-2xl px-4 py-3 flex items-center justify-between">
           <Link
             href="/"
-            className="text-blue-500 hover:underline flex items-center gap-1"
+            className="flex items-center text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors"
           >
-            ← 홈
+            <ChevronLeft size={24} />
           </Link>
-          <h1 className="text-2xl font-bold">🏆 랭킹</h1>
-          <div className="w-12" />
+          <h1 className="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2">
+            <span>🏆</span>
+            <span>랭킹</span>
+          </h1>
+          <div className="w-6" />
         </div>
+      </div>
 
+      <div className="flex-1 max-w-lg mx-auto w-full px-4 py-4">
         {/* 로그인 */}
-        <div className="mb-6 flex justify-end">
+        <div className="mb-4 flex justify-end">
           <UserAuth />
         </div>
 

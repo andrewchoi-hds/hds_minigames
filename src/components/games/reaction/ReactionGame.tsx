@@ -164,7 +164,7 @@ export default function ReactionGame() {
   // 결과 화면
   if (gameState.phase === 'result') {
     return (
-      <div className="w-full max-w-md mx-auto">
+      <div className="w-full">
         <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 text-center shadow-lg">
           <div className={`text-6xl font-bold mb-2 ${grade.color}`}>{grade.grade}</div>
           <p className="text-gray-500 dark:text-gray-400 mb-4">{grade.description}</p>
@@ -256,7 +256,7 @@ export default function ReactionGame() {
   }
 
   return (
-    <div className="w-full max-w-md mx-auto">
+    <div className="w-full">
       {/* 라운드 선택 (대기 중일 때만) */}
       {gameState.phase === 'waiting' && gameState.currentRound === 1 && (
         <div className="mb-4">

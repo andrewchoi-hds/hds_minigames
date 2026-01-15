@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import SnakeGame from '@/components/games/snake/SnakeGame';
 import { GameLobby } from '@/components/game-lobby';
+import { GamePlayLayout } from '@/components/layout';
 
 export default function SnakePage() {
   const [showLobby, setShowLobby] = useState(true);
@@ -64,25 +65,8 @@ export default function SnakePage() {
   }
 
   return (
-    <main className="min-h-screen bg-gray-100 dark:bg-gray-900 p-4">
-      <div className="max-w-lg mx-auto">
-        {/* 상단 바 */}
-        <div className="flex items-center justify-between mb-4">
-          <button
-            onClick={() => setShowLobby(true)}
-            className="flex items-center gap-1 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors"
-          >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-            </svg>
-            <span>로비</span>
-          </button>
-          <h1 className="text-lg font-bold">🐍 뱀 게임</h1>
-          <div className="w-12" />
-        </div>
-
-        <SnakeGame />
-      </div>
-    </main>
+    <GamePlayLayout gameId="snake" title="뱀 게임" icon="🐍" onBack={() => setShowLobby(true)}>
+      <SnakeGame />
+    </GamePlayLayout>
   );
 }

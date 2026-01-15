@@ -47,6 +47,8 @@ Next.js 14 기반의 미니게임 플랫폼으로, 우리은행 WON PLAY를 벤�
 │   │   │   └── MissionWidget.tsx     # 홈 미션 위젯
 │   │   ├── attendance/               # 출석 체크
 │   │   ├── game-result/              # 게임 결과 모달
+│   │   ├── layout/                   # 레이아웃 컴포넌트
+│   │   │   └── GamePlayLayout.tsx    # 게임 플레이 화면 래퍼
 │   │   └── games/                    # 게임별 컴포넌트
 │   │       ├── sudoku/
 │   │       ├── memory/
@@ -79,6 +81,8 @@ Next.js 14 기반의 미니게임 플랫폼으로, 우리은행 WON PLAY를 벤�
 - ✅ 게임 시작 대기 화면 (GameLobby 컴포넌트)
 - ✅ 게임별 아이콘 및 메타데이터 정의
 - ✅ 미니 랭킹 표시 (Top 3)
+- ✅ GamePlayLayout 컴포넌트 (게임별 테마 컬러 적용)
+- ✅ 통일된 헤더 스타일 (max-w-lg + rounded-2xl 카드)
 
 ### Phase 2: 미션 & 리워드 시스템 ✅
 
@@ -127,6 +131,56 @@ Next.js 14 기반의 미니게임 플랫폼으로, 우리은행 WON PLAY를 벤�
 - ✅ 미션 위젯 (홈 화면)
 - ✅ 출석 체크 위젯
 - ✅ 게임 결과 모달
+
+---
+
+## UI 디자인 패턴
+
+### 레이아웃 표준
+모든 페이지는 `max-w-lg mx-auto` 컨테이너를 사용합니다.
+
+```tsx
+<div className="min-h-screen bg-gray-100 dark:bg-gray-900">
+  <div className="max-w-lg mx-auto px-4">
+    {/* 헤더 - 둥근 카드 스타일 */}
+    <div className="bg-white dark:bg-gray-800 shadow-sm rounded-2xl px-4 py-3 mt-4">
+      {/* 헤더 내용 */}
+    </div>
+    {/* 콘텐츠 */}
+  </div>
+</div>
+```
+
+### 게임 페이지 구조
+게임 페이지는 `GamePlayLayout` 컴포넌트를 사용합니다.
+
+```tsx
+import { GamePlayLayout } from '@/components/layout';
+
+export default function GamePage() {
+  const [showLobby, setShowLobby] = useState(true);
+
+  if (showLobby) {
+    return <GameLobby gameId="game-id" onStart={() => setShowLobby(false)} />;
+  }
+
+  return (
+    <GamePlayLayout
+      gameId="game-id"
+      title="게임 이름"
+      icon="🎮"
+      onBack={() => setShowLobby(true)}
+    >
+      <GameComponent />
+    </GamePlayLayout>
+  );
+}
+```
+
+**GamePlayLayout 특징**:
+- 게임별 테마 컬러 자동 적용 (GAMES 배열의 gradient 속성)
+- 헤더가 콘텐츠와 동일한 너비의 둥근 카드 스타일
+- 뒤로가기 버튼 자동 포함
 
 ---
 

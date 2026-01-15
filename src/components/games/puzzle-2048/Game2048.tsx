@@ -139,7 +139,7 @@ export default function Game2048() {
   }
 
   return (
-    <div className="w-full max-w-md mx-auto">
+    <div className="w-full">
       {/* 점수 영역 */}
       <div className="flex justify-between items-start mb-4">
         <div>

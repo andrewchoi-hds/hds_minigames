@@ -131,7 +131,7 @@ export default function SlidingPuzzleGame() {
   // 난이도 선택 화면
   if (phase === 'select') {
     return (
-      <div className="w-full max-w-md mx-auto">
+      <div className="w-full">
         <div className="text-center mb-8">
           <div className="text-6xl mb-4">🧩</div>
           <h2 className="text-2xl font-bold mb-2">슬라이딩 퍼즐</h2>
@@ -190,7 +190,7 @@ export default function SlidingPuzzleGame() {
   const movable = getMovableTiles(gameState.board, gameState.size);
 
   return (
-    <div className="w-full max-w-md mx-auto">
+    <div className="w-full">
       {/* 상단 정보 */}
       <div className="flex justify-between items-center mb-4 bg-white dark:bg-gray-800 rounded-xl p-3 shadow-sm">
         <div className="flex items-center gap-3">

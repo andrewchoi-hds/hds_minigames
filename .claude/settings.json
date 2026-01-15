@@ -1,7 +1,7 @@
 {
-  "name": "session-wrap",
-  "version": "1.1.1",
-  "description": "Session wrap-up automation for Claude Code / 세션 마무리 자동화",
+  "name": "claude-plugins",
+  "version": "1.2.0",
+  "description": "Claude Code plugins: Session wrap-up + Fresh UI / 세션 마무리 + UI 디자인",
   "agents": {
     "doc-updater": {
       "description": "Analyze documentation update needs for CLAUDE.md and context.md. 세션에서 문서화할 내용을 분석합니다.",
@@ -140,6 +140,59 @@
         "문서 업데이트해줘",
         "기록해둘거 있어",
         "남길거 있어"
+      ]
+    },
+    "ui": {
+      "description": "Fresh UI design - escape generic AI patterns. 뻔한 AI 디자인을 탈피하고 개성있는 UI를 생성합니다.",
+      "triggers": [
+        "/ui",
+        "/fresh",
+        "/ui-design",
+
+        "== 레벨: common ==",
+        "UI 기본으로",
+        "기본 UI",
+        "평범하게 만들어",
+        "무난하게 디자인",
+        "안전하게 UI",
+        "simple UI",
+        "basic design",
+
+        "== 레벨: balance ==",
+        "UI 만들어줘",
+        "UI 만들어",
+        "프론트 만들어줘",
+        "디자인 해줘",
+        "적당히 만들어",
+        "밸런스 있게",
+        "make UI",
+        "create UI",
+        "design this",
+
+        "== 레벨: rare ==",
+        "독특하게 만들어",
+        "독특한 UI",
+        "개성있게 디자인",
+        "개성있는 UI",
+        "남다르게 만들어",
+        "특별하게 디자인",
+        "차별화된 UI",
+        "unique UI",
+        "distinctive design",
+        "different UI",
+
+        "== 레벨: unique ==",
+        "실험적으로 만들어",
+        "실험적인 UI",
+        "과감하게 디자인",
+        "파격적으로",
+        "파격적인 UI",
+        "미친듯이 만들어",
+        "완전 새롭게",
+        "experimental UI",
+        "bold design",
+        "crazy UI",
+        "wild design"
       ]
     }
   }

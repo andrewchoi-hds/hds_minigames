@@ -91,7 +91,7 @@ export default function FlappyGame() {
   const finalScore = calculateScore(gameState.score);
 
   return (
-    <div className="w-full max-w-md mx-auto">
+    <div className="w-full">
       {/* 점수 표시 */}
       <div className="flex justify-between items-center mb-4 bg-white dark:bg-gray-800 rounded-xl p-3 shadow-sm">
         <div>

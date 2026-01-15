@@ -40,9 +40,9 @@ export default function ProfilePage() {
 
   return (
     <div className="min-h-screen bg-gray-100 dark:bg-gray-900">
-      <div className="max-w-lg mx-auto">
+      <div className="max-w-lg mx-auto px-4">
         {/* 헤더 */}
-        <div className="bg-gradient-to-br from-blue-500 to-purple-600 text-white">
+        <div className="bg-gradient-to-br from-blue-500 to-purple-600 text-white rounded-2xl mt-4 shadow-lg">
           <div className="px-4 py-3 flex items-center justify-between">
             <Link href="/" className="text-white/80 hover:text-white">
               <ChevronLeft size={24} />
@@ -52,7 +52,7 @@ export default function ProfilePage() {
           </div>
 
           {/* 프로필 카드 */}
-          <div className="px-4 pb-6 pt-2">
+          <div className="px-4 pb-4">
           <div className="flex items-center gap-4">
             {/* 아바타 */}
             <div className="relative">
@@ -115,33 +115,33 @@ export default function ProfilePage() {
         </div>
 
         {/* 탭 */}
-        <div className="bg-white dark:bg-gray-800 px-4 py-2 border-b border-gray-200 dark:border-gray-700 sticky top-0 z-10">
-        <div className="flex gap-2">
-          <button
-            onClick={() => setActiveTab('stats')}
-            className={`flex-1 py-2 rounded-xl font-medium text-sm transition-all ${
-              activeTab === 'stats'
-                ? 'bg-blue-500 text-white'
-                : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400'
-            }`}
-          >
-            통계
-          </button>
-          <button
-            onClick={() => setActiveTab('achievements')}
-            className={`flex-1 py-2 rounded-xl font-medium text-sm transition-all ${
-              activeTab === 'achievements'
-                ? 'bg-blue-500 text-white'
-                : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400'
-            }`}
-          >
-            업적
-          </button>
+        <div className="bg-white dark:bg-gray-800 px-4 py-2 rounded-2xl mt-4 shadow-sm">
+          <div className="flex gap-2">
+            <button
+              onClick={() => setActiveTab('stats')}
+              className={`flex-1 py-2 rounded-xl font-medium text-sm transition-all ${
+                activeTab === 'stats'
+                  ? 'bg-blue-500 text-white'
+                  : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400'
+              }`}
+            >
+              통계
+            </button>
+            <button
+              onClick={() => setActiveTab('achievements')}
+              className={`flex-1 py-2 rounded-xl font-medium text-sm transition-all ${
+                activeTab === 'achievements'
+                  ? 'bg-blue-500 text-white'
+                  : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400'
+              }`}
+            >
+              업적
+            </button>
+          </div>
         </div>
-      </div>
 
         {/* 콘텐츠 */}
-        <div className="p-4">
+        <div className="py-4">
           {activeTab === 'stats' ? <StatsTab /> : <AchievementsTab onClaim={loadData} />}
         </div>
       </div>

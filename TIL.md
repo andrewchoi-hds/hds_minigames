@@ -105,3 +105,44 @@ grep "max-w-md|max-w-xl" src/app
 **왜 효과적이었나**:
 - 의존성 방향이 단방향: `getUserMissions` → `checkAndResetMissions` → `getRawUserMissions`
 - 각 함수가 단일 책임 원칙(SRP) 준수
+
+---
+
+### 6. 전체 너비 배경과 제한된 콘텐츠 너비 정렬 문제
+
+**문제**: 그라데이션 헤더가 전체 뷰포트 너비로 펼쳐지면서 `max-w-lg` 콘텐츠와 시각적으로 정렬되지 않음
+
+**원인**: 헤더 배경은 전체 너비, 내부 콘텐츠는 `max-w-lg`로 서로 다른 컨테이너에 속함
+
+**해결**: 그라데이션 헤더를 `max-w-lg` 컨테이너 안에 둥근 카드(`rounded-2xl`)로 변경
+
+```tsx
+// Before - 정렬 안 맞음
+<div className="bg-gradient-to-r from-blue-500 to-purple-600"> {/* 전체 너비 */}
+  <div className="max-w-lg mx-auto">...</div>
+</div>
+
+// After - 정렬 맞음
+<div className="max-w-lg mx-auto px-4">
+  <div className="bg-gradient-to-r from-blue-500 to-purple-600 rounded-2xl mt-4">...</div>
+</div>
+```
+
+---
+
+### 7. 공통 레이아웃 컴포넌트 패턴 (GamePlayLayout)
+
+**배운 것**: 13개 게임 페이지에서 반복되는 구조를 추상화하여 UI 일관성과 유지보수성 향상
+
+**적용**:
+- Props: `gameId`, `title`, `icon`, `onBack`, `children`
+- 게임별 테마 컬러 자동 적용 (GAMES 배열의 gradient 속성)
+- 뒤로가기 버튼 자동 포함
+
+---
+
+### 8. JSX 닫는 태그 누락 디버깅
+
+**배운 것**: TypeScript/JSX 파서는 닫는 태그 누락 시 **다음 닫는 태그**를 오류 위치로 표시
+
+**디버깅**: 오류 줄 번호 **이전**부터 역순으로 탐색, 에디터 괄호 매칭 활용

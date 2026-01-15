@@ -39,19 +39,21 @@ export default function GameLobby({
   return (
     <div className="min-h-screen bg-gray-100 dark:bg-gray-900 flex flex-col">
       {/* 상단 네비게이션 */}
-      <div className="bg-white dark:bg-gray-800 px-4 py-3 flex items-center justify-between shadow-sm">
-        <Link
-          href="/"
-          className="flex items-center gap-1 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors"
-        >
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-          </svg>
-        </Link>
-        <h1 className="text-lg font-bold text-gray-900 dark:text-white">
-          {game.name}
-        </h1>
-        <div className="w-5" />
+      <div className="max-w-lg mx-auto w-full px-4 pt-4">
+        <div className="bg-white dark:bg-gray-800 shadow-sm rounded-2xl px-4 py-3 flex items-center justify-between">
+          <Link
+            href="/"
+            className="flex items-center gap-1 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+            </svg>
+          </Link>
+          <h1 className="text-lg font-bold text-gray-900 dark:text-white">
+            {game.name}
+          </h1>
+          <div className="w-5" />
+        </div>
       </div>
 
       {/* 메인 콘텐츠 */}

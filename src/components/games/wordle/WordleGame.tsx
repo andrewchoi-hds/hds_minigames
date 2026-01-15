@@ -144,7 +144,7 @@ export default function WordleGame() {
   // 모드 선택 화면
   if (phase === 'select') {
     return (
-      <div className="w-full max-w-md mx-auto">
+      <div className="w-full">
         <div className="text-center mb-8">
           <div className="text-6xl mb-4">📝</div>
           <h2 className="text-2xl font-bold mb-2">워들</h2>
@@ -294,7 +294,7 @@ export default function WordleGame() {
   };
 
   return (
-    <div className="w-full max-w-lg mx-auto">
+    <div className="w-full">
       {/* 상단 */}
       <div className="flex justify-between items-center mb-4">
         <button

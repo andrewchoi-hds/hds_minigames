@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import ColorMatchGame from '@/components/games/color-match/ColorMatchGame';
 import { GameLobby } from '@/components/game-lobby';
+import { GamePlayLayout } from '@/components/layout';
 
 export default function ColorMatchPage() {
   const [showLobby, setShowLobby] = useState(true);
@@ -59,24 +60,8 @@ export default function ColorMatchPage() {
   }
 
   return (
-    <main className="min-h-screen bg-gray-100 dark:bg-gray-900 p-4">
-      <div className="max-w-lg mx-auto">
-        <div className="flex items-center justify-between mb-4">
-          <button
-            onClick={() => setShowLobby(true)}
-            className="flex items-center gap-1 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors"
-          >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-            </svg>
-            <span>로비</span>
-          </button>
-          <h1 className="text-lg font-bold">🎨 색상 맞추기</h1>
-          <div className="w-12" />
-        </div>
-
-        <ColorMatchGame />
-      </div>
-    </main>
+    <GamePlayLayout gameId="color-match" title="색상 맞추기" icon="🎨" onBack={() => setShowLobby(true)}>
+      <ColorMatchGame />
+    </GamePlayLayout>
   );
 }

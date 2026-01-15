@@ -170,7 +170,7 @@ export default function TypingGame() {
   // 난이도 선택 화면
   if (phase === 'select') {
     return (
-      <div className="w-full max-w-md mx-auto">
+      <div className="w-full">
         <div className="text-center mb-8">
           <div className="text-6xl mb-4">⌨️</div>
           <h2 className="text-2xl font-bold mb-2">타이핑 게임</h2>
@@ -258,7 +258,7 @@ export default function TypingGame() {
     const isNewRecord = wpm > 0 && wpm >= bestWPM[difficulty];
 
     return (
-      <div className="w-full max-w-md mx-auto">
+      <div className="w-full">
         <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 text-center shadow-lg">
           <div className="text-5xl mb-3">{isNewRecord ? '🏆' : '⌨️'}</div>
           <h3 className="text-2xl font-bold mb-4">
@@ -335,7 +335,7 @@ export default function TypingGame() {
   const matchingIds = getMatchingWords(gameState.words, gameState.currentInput);
 
   return (
-    <div className="w-full max-w-2xl mx-auto">
+    <div className="w-full">
       {/* 상단 정보 */}
       <div className="flex justify-between items-center mb-4 bg-white dark:bg-gray-800 rounded-xl p-3 shadow-sm">
         <div className="flex items-center gap-4">

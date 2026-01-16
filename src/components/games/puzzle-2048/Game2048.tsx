@@ -11,6 +11,8 @@ import {
 } from '@/lib/games/puzzle-2048';
 import ScoreSubmitModal from '@/components/ranking/ScoreSubmitModal';
 import { ScoreCalculator } from '@/lib/ranking';
+import { recordGamePlay } from '@/lib/mission';
+import { recordGameStats } from '@/lib/stats';
 
 const STORAGE_KEY_SCORE = '2048-best-score';
 const STORAGE_KEY_TILE = '2048-best-tile';
@@ -20,6 +22,7 @@ export default function Game2048() {
   const [touchStart, setTouchStart] = useState<{ x: number; y: number } | null>(null);
   const [showMilestoneModal, setShowMilestoneModal] = useState<number | null>(null);
   const [showScoreModal, setShowScoreModal] = useState(false);
+  const [hasRecordedGame, setHasRecordedGame] = useState(false);
 
   // 초기화
   useEffect(() => {
@@ -44,6 +47,16 @@ export default function Game2048() {
       setGameState(prev => prev ? { ...prev, milestoneReached: null } : prev);
     }
   }, [gameState?.milestoneReached]);
+
+  // 게임 오버 시 미션/통계 기록
+  useEffect(() => {
+    if (gameState?.isGameOver && !hasRecordedGame) {
+      const finalScore = ScoreCalculator.puzzle2048(gameState.score, Math.max(...gameState.tiles.map(t => t.value)));
+      recordGamePlay({ gameType: 'puzzle2048', score: finalScore, won: false });
+      recordGameStats({ gameType: 'puzzle2048', score: finalScore, won: false });
+      setHasRecordedGame(true);
+    }
+  }, [gameState?.isGameOver, hasRecordedGame, gameState?.score, gameState?.tiles]);
 
   // 키보드 입력
   const handleMove = useCallback((direction: Direction) => {
@@ -125,6 +138,7 @@ export default function Game2048() {
     const bestTile = gameState?.bestTile || 0;
     setGameState(initGame(bestScore, bestTile));
     setShowMilestoneModal(null);
+    setHasRecordedGame(false);
   };
 
   // 현재 최대 타일 값

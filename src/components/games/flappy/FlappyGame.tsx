@@ -12,12 +12,15 @@ import {
 } from '@/lib/games/flappy';
 import ScoreSubmitModal from '@/components/ranking/ScoreSubmitModal';
 import { ScoreCalculator } from '@/lib/ranking';
+import { recordGamePlay } from '@/lib/mission';
+import { recordGameStats } from '@/lib/stats';
 
 export default function FlappyGame() {
   const [gameState, setGameState] = useState<GameState>(() => initGame());
   const [bestScore, setBestScore] = useState(0);
   const [showScoreModal, setShowScoreModal] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
+  const [hasRecordedGame, setHasRecordedGame] = useState(false);
   const gameLoopRef = useRef<number | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const lastTimeRef = useRef<number>(0);
@@ -39,6 +42,16 @@ export default function FlappyGame() {
       localStorage.setItem('flappy-best', gameState.score.toString());
     }
   }, [gameState.isGameOver, gameState.score, bestScore]);
+
+  // 게임 오버 시 미션/통계 기록
+  useEffect(() => {
+    if (gameState.isGameOver && !hasRecordedGame) {
+      const finalScore = ScoreCalculator.flappy(gameState.score);
+      recordGamePlay({ gameType: 'flappy', score: finalScore, won: false });
+      recordGameStats({ gameType: 'flappy', score: finalScore, won: false });
+      setHasRecordedGame(true);
+    }
+  }, [gameState.isGameOver, hasRecordedGame, gameState.score]);
 
   // 게임 루프 (고정 프레임레이트)
   useEffect(() => {
@@ -105,6 +118,7 @@ export default function FlappyGame() {
   const handleNewGame = () => {
     setGameState(initGame());
     setIsPaused(false);
+    setHasRecordedGame(false);
   };
 
   const grade = getGrade(gameState.score);

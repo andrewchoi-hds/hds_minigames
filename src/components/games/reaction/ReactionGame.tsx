@@ -13,6 +13,8 @@ import {
 } from '@/lib/games/reaction';
 import ScoreSubmitModal from '@/components/ranking/ScoreSubmitModal';
 import { ScoreCalculator } from '@/lib/ranking';
+import { recordGamePlay } from '@/lib/mission';
+import { recordGameStats } from '@/lib/stats';
 
 const ROUND_OPTIONS = [3, 5, 10];
 
@@ -34,6 +36,7 @@ export default function ReactionGame() {
   const [bestRecord, setBestRecord] = useState<number>(0);
   const [showScoreModal, setShowScoreModal] = useState(false);
   const [specialMessage, setSpecialMessage] = useState<{ emoji: string; text: string } | null>(null);
+  const [hasRecordedGame, setHasRecordedGame] = useState(false);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
 
   // 로컬 스토리지에서 최고 기록 로드
@@ -64,10 +67,19 @@ export default function ReactionGame() {
     }
   }, [gameState.phase, gameState.waitTime]);
 
-  // 결과 저장 및 이스터에그 체크
+  // 결과 저장, 미션/통계 기록 및 이스터에그 체크
   useEffect(() => {
     if (gameState.phase === 'result') {
       const avg = getAverageTime(gameState.results);
+
+      // 미션/통계 기록
+      if (!hasRecordedGame && avg > 0) {
+        const finalScore = ScoreCalculator.reaction(avg);
+        recordGamePlay({ gameType: 'reaction', score: finalScore, won: true });
+        recordGameStats({ gameType: 'reaction', score: finalScore, won: true });
+        setHasRecordedGame(true);
+      }
+
       if (avg > 0 && (bestRecord === 0 || avg < bestRecord)) {
         setBestRecord(avg);
         localStorage.setItem('reaction-best', avg.toString());
@@ -115,6 +127,7 @@ export default function ReactionGame() {
       clearTimeout(timerRef.current);
     }
     setGameState(initGame(roundCount));
+    setHasRecordedGame(false);
   };
 
   // 배경색 및 메시지

@@ -13,6 +13,8 @@ import {
 } from '@/lib/games/sliding-puzzle';
 import ScoreSubmitModal from '@/components/ranking/ScoreSubmitModal';
 import { ScoreCalculator } from '@/lib/ranking';
+import { recordGamePlay } from '@/lib/mission';
+import { recordGameStats } from '@/lib/stats';
 
 const DIFFICULTY_OPTIONS: { key: Difficulty; color: string }[] = [
   { key: '3x3', color: 'bg-green-500' },
@@ -31,6 +33,7 @@ export default function SlidingPuzzleGame() {
     '5x5': null,
   });
   const [showScoreModal, setShowScoreModal] = useState(false);
+  const [hasRecordedGame, setHasRecordedGame] = useState(false);
 
   // 로컬 스토리지에서 최고 기록 로드
   useEffect(() => {
@@ -57,6 +60,7 @@ export default function SlidingPuzzleGame() {
     setGameState(initGame(diff));
     setTimer(0);
     setPhase('playing');
+    setHasRecordedGame(false);
   }, []);
 
   // 기록 저장
@@ -80,8 +84,16 @@ export default function SlidingPuzzleGame() {
     if (gameState?.isWon && gameState.startTime) {
       const time = Math.floor((Date.now() - gameState.startTime) / 1000);
       saveRecord(difficulty, gameState.moves, time);
+
+      // 미션/통계 기록
+      if (!hasRecordedGame) {
+        const finalScore = ScoreCalculator.slidingPuzzle(difficulty, gameState.moves, time);
+        recordGamePlay({ gameType: 'sliding-puzzle', score: finalScore, won: true });
+        recordGameStats({ gameType: 'sliding-puzzle', score: finalScore, won: true });
+        setHasRecordedGame(true);
+      }
     }
-  }, [gameState?.isWon, gameState?.moves, gameState?.startTime, difficulty, saveRecord]);
+  }, [gameState?.isWon, gameState?.moves, gameState?.startTime, difficulty, saveRecord, hasRecordedGame]);
 
   // 타일 클릭
   const handleTileClick = (index: number) => {

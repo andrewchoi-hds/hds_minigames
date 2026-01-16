@@ -14,6 +14,8 @@ import {
 } from '@/lib/games/snake';
 import ScoreSubmitModal from '@/components/ranking/ScoreSubmitModal';
 import { ScoreCalculator } from '@/lib/ranking';
+import { recordGamePlay } from '@/lib/mission';
+import { recordGameStats } from '@/lib/stats';
 
 const CELL_SIZE = 20;
 
@@ -22,6 +24,7 @@ export default function SnakeGame() {
   const [bestScore, setBestScore] = useState(0);
   const [showScoreModal, setShowScoreModal] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
+  const [hasRecordedGame, setHasRecordedGame] = useState(false);
   const gameLoopRef = useRef<NodeJS.Timeout | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -42,6 +45,16 @@ export default function SnakeGame() {
       localStorage.setItem('snake-best', gameState.score.toString());
     }
   }, [gameState.isGameOver, gameState.score, bestScore]);
+
+  // 게임 오버 시 미션/통계 기록
+  useEffect(() => {
+    if (gameState.isGameOver && !hasRecordedGame) {
+      const finalScore = ScoreCalculator.snake(gameState.score, gameState.snake.length);
+      recordGamePlay({ gameType: 'snake', score: finalScore, won: false });
+      recordGameStats({ gameType: 'snake', score: finalScore, won: false });
+      setHasRecordedGame(true);
+    }
+  }, [gameState.isGameOver, hasRecordedGame, gameState.score, gameState.snake.length]);
 
   // 게임 루프
   useEffect(() => {
@@ -123,6 +136,7 @@ export default function SnakeGame() {
   const handleNewGame = () => {
     setGameState(initGame());
     setIsPaused(false);
+    setHasRecordedGame(false);
   };
 
   // 터치 이벤트

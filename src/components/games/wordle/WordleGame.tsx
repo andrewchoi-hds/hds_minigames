@@ -15,6 +15,8 @@ import {
 } from '@/lib/games/wordle';
 import ScoreSubmitModal from '@/components/ranking/ScoreSubmitModal';
 import { ScoreCalculator } from '@/lib/ranking';
+import { recordGamePlay } from '@/lib/mission';
+import { recordGameStats } from '@/lib/stats';
 
 type GameMode = 'daily' | 'infinite';
 
@@ -34,6 +36,7 @@ export default function WordleGame() {
   const [stats, setStats] = useState({ played: 0, won: 0, streak: 0 });
   const [showScoreModal, setShowScoreModal] = useState(false);
   const [gameStartTime, setGameStartTime] = useState<number>(0);
+  const [hasRecordedGame, setHasRecordedGame] = useState(false);
 
   // 로컬 스토리지에서 통계 로드
   useEffect(() => {
@@ -49,6 +52,17 @@ export default function WordleGame() {
     localStorage.setItem('wordle-stats', JSON.stringify(newStats));
   };
 
+  // 게임 완료 시 미션/통계 기록
+  useEffect(() => {
+    if (gameState?.isGameOver && !hasRecordedGame) {
+      const timeSeconds = Math.floor((Date.now() - gameStartTime) / 1000);
+      const finalScore = gameState.isWon ? ScoreCalculator.wordle(gameState.guesses.length, timeSeconds) : 0;
+      recordGamePlay({ gameType: 'wordle', score: finalScore, won: gameState.isWon });
+      recordGameStats({ gameType: 'wordle', score: finalScore, won: gameState.isWon });
+      setHasRecordedGame(true);
+    }
+  }, [gameState?.isGameOver, gameState?.isWon, gameState?.guesses.length, hasRecordedGame, gameStartTime]);
+
   // 게임 시작
   const startGame = useCallback((selectedMode: GameMode) => {
     setMode(selectedMode);
@@ -58,6 +72,7 @@ export default function WordleGame() {
     setShakeRow(null);
     setRevealRow(null);
     setGameStartTime(Date.now());
+    setHasRecordedGame(false);
   }, []);
 
   // 메시지 표시

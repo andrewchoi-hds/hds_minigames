@@ -12,12 +12,15 @@ import {
 } from '@/lib/games/color-match';
 import ScoreSubmitModal from '@/components/ranking/ScoreSubmitModal';
 import { ScoreCalculator } from '@/lib/ranking';
+import { recordGamePlay } from '@/lib/mission';
+import { recordGameStats } from '@/lib/stats';
 
 export default function ColorMatchGame() {
   const [gameState, setGameState] = useState<GameState>(() => initGame());
   const [bestScore, setBestScore] = useState(0);
   const [showScoreModal, setShowScoreModal] = useState(false);
   const [feedback, setFeedback] = useState<'correct' | 'wrong' | null>(null);
+  const [hasRecordedGame, setHasRecordedGame] = useState(false);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
 
   // 로컬 스토리지에서 최고 기록 로드
@@ -28,13 +31,24 @@ export default function ColorMatchGame() {
     }
   }, []);
 
-  // 게임 오버 시 최고 기록 저장
+  // 게임 오버 시 최고 기록 저장 및 미션/통계 기록
   useEffect(() => {
-    if (gameState.isGameOver && gameState.score > bestScore) {
-      setBestScore(gameState.score);
-      localStorage.setItem('color-match-best', gameState.score.toString());
+    if (gameState.isGameOver) {
+      // 최고 기록 저장
+      if (gameState.score > bestScore) {
+        setBestScore(gameState.score);
+        localStorage.setItem('color-match-best', gameState.score.toString());
+      }
+
+      // 미션/통계 기록
+      if (!hasRecordedGame) {
+        const finalScore = calculateScore(gameState.score, gameState.round, gameState.maxStreak);
+        recordGamePlay({ gameType: 'color-match', score: finalScore, won: false });
+        recordGameStats({ gameType: 'color-match', score: finalScore, won: false });
+        setHasRecordedGame(true);
+      }
     }
-  }, [gameState.isGameOver, gameState.score, bestScore]);
+  }, [gameState.isGameOver, gameState.score, bestScore, gameState.round, gameState.maxStreak, hasRecordedGame]);
 
   // 타이머
   useEffect(() => {
@@ -69,11 +83,13 @@ export default function ColorMatchGame() {
   const handleStart = useCallback(() => {
     const newState = initGame();
     setGameState(startGame(newState));
+    setHasRecordedGame(false);
   }, []);
 
   // 새 게임
   const handleNewGame = () => {
     setGameState(initGame());
+    setHasRecordedGame(false);
   };
 
   const grade = getGrade(gameState.score);

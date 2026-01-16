@@ -13,6 +13,8 @@ import {
 } from '@/lib/games/breakout';
 import ScoreSubmitModal from '@/components/ranking/ScoreSubmitModal';
 import { ScoreCalculator } from '@/lib/ranking';
+import { recordGamePlay } from '@/lib/mission';
+import { recordGameStats } from '@/lib/stats';
 
 const { GAME_WIDTH, GAME_HEIGHT, BRICK_ROWS, BRICK_COLS } = CONSTANTS;
 
@@ -21,6 +23,7 @@ export default function BreakoutGame() {
   const [bestScore, setBestScore] = useState(0);
   const [showScoreModal, setShowScoreModal] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
+  const [hasRecordedGame, setHasRecordedGame] = useState(false);
   const gameLoopRef = useRef<number | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -41,6 +44,18 @@ export default function BreakoutGame() {
       localStorage.setItem('breakout-best', gameState.score.toString());
     }
   }, [gameState.isGameOver, gameState.score, bestScore]);
+
+  // 게임 오버 시 미션/통계 기록
+  useEffect(() => {
+    if (gameState.isGameOver && !hasRecordedGame) {
+      const bricksCleared = totalBricks - gameState.bricks.length;
+      const finalScore = ScoreCalculator.breakout(gameState.score, bricksCleared, gameState.maxCombo);
+      const won = bricksCleared === totalBricks;
+      recordGamePlay({ gameType: 'breakout', score: finalScore, won });
+      recordGameStats({ gameType: 'breakout', score: finalScore, won });
+      setHasRecordedGame(true);
+    }
+  }, [gameState.isGameOver, hasRecordedGame, gameState.score, gameState.bricks.length, gameState.maxCombo, totalBricks]);
 
   // 게임 루프
   useEffect(() => {
@@ -109,6 +124,7 @@ export default function BreakoutGame() {
   const handleNewGame = () => {
     setGameState(initGame());
     setIsPaused(false);
+    setHasRecordedGame(false);
   };
 
   const grade = getGrade(gameState.score);

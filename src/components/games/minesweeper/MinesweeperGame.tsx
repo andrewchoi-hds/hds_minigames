@@ -13,6 +13,8 @@ import {
 } from '@/lib/games/minesweeper';
 import ScoreSubmitModal from '@/components/ranking/ScoreSubmitModal';
 import { ScoreCalculator } from '@/lib/ranking';
+import { recordGamePlay } from '@/lib/mission';
+import { recordGameStats } from '@/lib/stats';
 
 const DIFFICULTY_CONFIG: Record<Difficulty, { label: string; description: string; color: string }> = {
   easy: { label: 'Easy', description: '8×8, 지뢰 10개', color: 'bg-green-500' },
@@ -30,6 +32,17 @@ export default function MinesweeperGame() {
   const [isTimerRunning, setIsTimerRunning] = useState(false);
   const [showScoreModal, setShowScoreModal] = useState(false);
   const [finalScore, setFinalScore] = useState(0);
+  const [hasRecordedGame, setHasRecordedGame] = useState(false);
+
+  // 게임 완료 시 미션/통계 기록
+  useEffect(() => {
+    if (gameState && (gameState.isWon || gameState.isGameOver) && !hasRecordedGame) {
+      const score = gameState.isWon ? ScoreCalculator.minesweeper(difficulty, timer) : 0;
+      recordGamePlay({ gameType: 'minesweeper', score, won: gameState.isWon });
+      recordGameStats({ gameType: 'minesweeper', score, won: gameState.isWon });
+      setHasRecordedGame(true);
+    }
+  }, [gameState?.isWon, gameState?.isGameOver, hasRecordedGame, difficulty, timer]);
 
   // 게임 시작
   const startGame = useCallback((diff: Difficulty) => {
@@ -38,6 +51,7 @@ export default function MinesweeperGame() {
     setTimer(0);
     setIsTimerRunning(false);
     setPhase('playing');
+    setHasRecordedGame(false);
   }, []);
 
   // 타이머

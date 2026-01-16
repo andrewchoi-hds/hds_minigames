@@ -15,6 +15,8 @@ import {
 } from '@/lib/games/baseball';
 import ScoreSubmitModal from '@/components/ranking/ScoreSubmitModal';
 import { ScoreCalculator } from '@/lib/ranking';
+import { recordGamePlay } from '@/lib/mission';
+import { recordGameStats } from '@/lib/stats';
 
 const DIFFICULTY_OPTIONS: { key: Difficulty; color: string }[] = [
   { key: '3digit', color: 'bg-green-500' },
@@ -32,6 +34,7 @@ export default function BaseballGame() {
     '4digit': null,
   });
   const [showScoreModal, setShowScoreModal] = useState(false);
+  const [hasRecordedGame, setHasRecordedGame] = useState(false);
 
   // 로컬 스토리지에서 최고 기록 로드
   useEffect(() => {
@@ -59,6 +62,7 @@ export default function BaseballGame() {
     setTimer(0);
     setError('');
     setPhase('playing');
+    setHasRecordedGame(false);
   }, []);
 
   // 기록 저장
@@ -77,12 +81,21 @@ export default function BaseballGame() {
     [bestRecords]
   );
 
-  // 승리 처리
+  // 승리 처리 및 미션/통계 기록
   useEffect(() => {
     if (gameState?.isWon) {
       saveRecord(difficulty, gameState.guesses.length);
+
+      // 미션/통계 기록
+      if (!hasRecordedGame) {
+        const digitCount = difficulty === '4digit' ? 4 : 3;
+        const finalScore = ScoreCalculator.baseball(gameState.guesses.length, timer, digitCount);
+        recordGamePlay({ gameType: 'baseball', score: finalScore, won: true });
+        recordGameStats({ gameType: 'baseball', score: finalScore, won: true });
+        setHasRecordedGame(true);
+      }
     }
-  }, [gameState?.isWon, gameState?.guesses.length, difficulty, saveRecord]);
+  }, [gameState?.isWon, gameState?.guesses.length, difficulty, saveRecord, hasRecordedGame, timer]);
 
   // 숫자 입력
   const handleDigitInput = (digit: string) => {

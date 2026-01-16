@@ -13,6 +13,8 @@ import {
 } from '@/lib/games/memory';
 import ScoreSubmitModal from '@/components/ranking/ScoreSubmitModal';
 import { ScoreCalculator } from '@/lib/ranking';
+import { recordGamePlay } from '@/lib/mission';
+import { recordGameStats } from '@/lib/stats';
 
 const DIFFICULTY_CONFIG: Record<Difficulty, { label: string; description: string; color: string }> = {
   easy: { label: 'Easy', description: '6쌍 (3×4)', color: 'bg-green-500' },
@@ -30,6 +32,17 @@ export default function MemoryGame() {
   const [isChecking, setIsChecking] = useState(false);
   const [showResult, setShowResult] = useState(false);
   const [showScoreModal, setShowScoreModal] = useState(false);
+  const [hasRecordedGame, setHasRecordedGame] = useState(false);
+
+  // 게임 완료 시 미션/통계 기록
+  useEffect(() => {
+    if (showResult && gameState?.isComplete && !hasRecordedGame) {
+      const finalScore = ScoreCalculator.memory(difficulty, gameState.moves, timer);
+      recordGamePlay({ gameType: 'memory', score: finalScore, won: true });
+      recordGameStats({ gameType: 'memory', score: finalScore, won: true });
+      setHasRecordedGame(true);
+    }
+  }, [showResult, gameState?.isComplete, hasRecordedGame, difficulty, gameState?.moves, timer]);
 
   // 게임 시작
   const startGame = useCallback((diff: Difficulty) => {
@@ -38,6 +51,7 @@ export default function MemoryGame() {
     setTimer(0);
     setPhase('playing');
     setShowResult(false);
+    setHasRecordedGame(false);
   }, []);
 
   // 타이머

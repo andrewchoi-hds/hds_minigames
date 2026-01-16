@@ -17,6 +17,8 @@ import SudokuBoard from './SudokuBoard';
 import NumberPad from './NumberPad';
 import ScoreSubmitModal from '@/components/ranking/ScoreSubmitModal';
 import { ScoreCalculator } from '@/lib/ranking';
+import { recordGamePlay } from '@/lib/mission';
+import { recordGameStats } from '@/lib/stats';
 
 const DIFFICULTY_CONFIG: Record<Difficulty, { label: string; color: string; description: string }> = {
   normal: { label: 'Normal', color: 'bg-green-500', description: '입문자를 위한 난이도' },
@@ -57,6 +59,7 @@ export default function SudokuGame() {
   const [mistakes, setMistakes] = useState(0);
   const [isGameOver, setIsGameOver] = useState(false);
   const [completedNumbers, setCompletedNumbers] = useState<Set<number>>(new Set());
+  const [hasRecordedGame, setHasRecordedGame] = useState(false);
 
   // 새 게임 시작
   const startNewGame = useCallback((diff: Difficulty) => {
@@ -81,6 +84,7 @@ export default function SudokuGame() {
     setMistakes(0);
     setIsGameOver(false);
     setCompletedNumbers(getCompletedNumbers(newBoard));
+    setHasRecordedGame(false);
   }, []);
 
   // 타이머
@@ -93,6 +97,16 @@ export default function SudokuGame() {
     }
     return () => clearInterval(interval);
   }, [isRunning, isComplete, isPaused, gameState]);
+
+  // 게임 완료/실패 시 미션/통계 기록
+  useEffect(() => {
+    if ((isComplete || isGameOver) && !hasRecordedGame) {
+      const finalScore = isComplete ? ScoreCalculator.sudoku(difficulty, timer, hintsUsed) : 0;
+      recordGamePlay({ gameType: 'sudoku', score: finalScore, won: isComplete });
+      recordGameStats({ gameType: 'sudoku', score: finalScore, won: isComplete });
+      setHasRecordedGame(true);
+    }
+  }, [isComplete, isGameOver, hasRecordedGame, difficulty, timer, hintsUsed]);
 
   // 키보드 입력
   useEffect(() => {

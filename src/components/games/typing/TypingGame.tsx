@@ -16,6 +16,8 @@ import {
 } from '@/lib/games/typing';
 import ScoreSubmitModal from '@/components/ranking/ScoreSubmitModal';
 import { ScoreCalculator } from '@/lib/ranking';
+import { recordGamePlay } from '@/lib/mission';
+import { recordGameStats } from '@/lib/stats';
 
 const DIFFICULTY_OPTIONS: { key: Difficulty; color: string; description: string }[] = [
   { key: 'easy', color: 'bg-green-500', description: '짧은 단어, 느린 속도' },
@@ -36,6 +38,7 @@ export default function TypingGame() {
     hard: 0,
   });
   const [showScoreModal, setShowScoreModal] = useState(false);
+  const [hasRecordedGame, setHasRecordedGame] = useState(false);
 
   const inputRef = useRef<HTMLInputElement>(null);
   const gameLoopRef = useRef<number | null>(null);
@@ -56,6 +59,7 @@ export default function TypingGame() {
     const state = initGame(difficulty, duration);
     setGameState(state);
     setPhase('playing');
+    setHasRecordedGame(false);
     lastTimeRef.current = performance.now();
 
     // 첫 단어 추가
@@ -113,10 +117,20 @@ export default function TypingGame() {
     };
   }, [phase, difficulty]);
 
-  // 게임 종료 시 기록 저장
+  // 게임 종료 시 기록 저장 및 미션/통계 기록
   useEffect(() => {
     if (phase === 'result' && gameState) {
       const wpm = calculateWPM(gameState);
+      const accuracy = calculateAccuracy(gameState);
+
+      // 미션/통계 기록
+      if (!hasRecordedGame) {
+        const finalScore = ScoreCalculator.typing(wpm, accuracy, gameState.combo);
+        recordGamePlay({ gameType: 'typing', score: finalScore, won: true });
+        recordGameStats({ gameType: 'typing', score: finalScore, won: true });
+        setHasRecordedGame(true);
+      }
+
       if (wpm > bestWPM[difficulty]) {
         const newBest = { ...bestWPM, [difficulty]: wpm };
         setBestWPM(newBest);

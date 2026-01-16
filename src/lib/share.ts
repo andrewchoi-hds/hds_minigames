@@ -1,3 +1,4 @@
+import html2canvas from 'html2canvas';
 import { GameType, GAME_NAMES } from './supabase';
 
 // 공유 데이터 타입
@@ -141,4 +142,98 @@ export async function shareInvite(
   }
 
   return { success: false, method: 'clipboard', error: '공유에 실패했습니다' };
+}
+
+// HTML 요소를 이미지로 캡처
+export async function captureElementAsImage(
+  element: HTMLElement
+): Promise<Blob | null> {
+  try {
+    const canvas = await html2canvas(element, {
+      backgroundColor: '#ffffff',
+      scale: 2, // 고해상도 캡처
+      logging: false,
+      useCORS: true,
+    });
+
+    return new Promise((resolve) => {
+      canvas.toBlob((blob) => {
+        resolve(blob);
+      }, 'image/png');
+    });
+  } catch (error) {
+    console.error('이미지 캡처 실패:', error);
+    return null;
+  }
+}
+
+// 파일 공유 지원 여부 확인
+export function canShareFiles(): boolean {
+  if (typeof navigator === 'undefined' || !navigator.share) {
+    return false;
+  }
+
+  // navigator.canShare가 있으면 더 정확한 검사
+  if (navigator.canShare) {
+    const testFile = new File(['test'], 'test.png', { type: 'image/png' });
+    return navigator.canShare({ files: [testFile] });
+  }
+
+  // canShare가 없으면 일단 true 반환 (실제 공유 시도에서 실패할 수 있음)
+  return true;
+}
+
+// 이미지 다운로드
+export function downloadImage(blob: Blob, filename: string): void {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+// 게임 결과를 이미지로 공유
+export async function shareGameResultAsImage(
+  element: HTMLElement,
+  data: ShareData
+): Promise<{ success: boolean; method: 'share' | 'download'; error?: string }> {
+  const gameName = GAME_NAMES[data.gameType] || data.gameType;
+  const filename = `${gameName}-${data.score}점.png`;
+
+  // 이미지 캡처
+  const blob = await captureElementAsImage(element);
+
+  if (!blob) {
+    return { success: false, method: 'download', error: '이미지 캡처에 실패했습니다' };
+  }
+
+  // Web Share API로 파일 공유 시도
+  if (canShareFiles()) {
+    try {
+      const file = new File([blob], filename, { type: 'image/png' });
+      await navigator.share({
+        title: `Mini Games - ${gameName}`,
+        text: `${gameName}에서 ${data.score.toLocaleString()}점 달성!`,
+        files: [file],
+      });
+      return { success: true, method: 'share' };
+    } catch (error: unknown) {
+      // 사용자가 취소한 경우
+      if (error instanceof Error && error.name === 'AbortError') {
+        return { success: false, method: 'share', error: '공유가 취소되었습니다' };
+      }
+      // 다른 오류는 다운로드 폴백으로 진행
+    }
+  }
+
+  // Fallback: 이미지 다운로드
+  try {
+    downloadImage(blob, filename);
+    return { success: true, method: 'download' };
+  } catch {
+    return { success: false, method: 'download', error: '다운로드에 실패했습니다' };
+  }
 }

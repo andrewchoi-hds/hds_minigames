@@ -33,33 +33,35 @@ export default function GameLobby({
   const game = GAMES.find((g) => g.id === gameId);
 
   if (!game) {
-    return <div>게임을 찾을 수 없습니다.</div>;
+    return <div role="alert">게임을 찾을 수 없습니다.</div>;
   }
 
   return (
     <div className="min-h-screen bg-gray-100 dark:bg-gray-900 flex flex-col">
       {/* 상단 네비게이션 */}
-      <div className="max-w-lg mx-auto w-full px-4 pt-4">
-        <div className="bg-white dark:bg-gray-800 shadow-sm rounded-2xl px-4 py-3 flex items-center justify-between">
+      <header className="max-w-lg mx-auto w-full px-4 pt-4">
+        <nav className="bg-white dark:bg-gray-800 shadow-sm rounded-2xl px-4 py-3 flex items-center justify-between" aria-label="게임 네비게이션">
           <Link
             href="/"
-            className="flex items-center gap-1 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors"
+            aria-label="홈으로 돌아가기"
+            className="flex items-center gap-1 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 rounded-lg p-1"
           >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
             </svg>
           </Link>
           <h1 className="text-lg font-bold text-gray-900 dark:text-white">
             {game.name}
           </h1>
-          <div className="w-5" />
-        </div>
-      </div>
+          <div className="w-5" aria-hidden="true" />
+        </nav>
+      </header>
 
       {/* 메인 콘텐츠 */}
-      <div className="flex-1 flex flex-col max-w-lg mx-auto w-full px-4 py-4">
+      <main className="flex-1 flex flex-col max-w-lg mx-auto w-full px-4 py-4">
         {/* 히어로 카드 */}
-        <div
+        <section
+          aria-label="게임 정보"
           className={`
             relative overflow-hidden rounded-2xl
             bg-gradient-to-br ${game.gradient}
@@ -67,7 +69,7 @@ export default function GameLobby({
           `}
         >
           {/* 배경 효과 */}
-          <div className="absolute inset-0 opacity-20">
+          <div className="absolute inset-0 opacity-20" aria-hidden="true">
             <div
               className="absolute inset-0"
               style={{
@@ -81,7 +83,7 @@ export default function GameLobby({
 
           <div className="relative z-10 flex items-center gap-4">
             {/* 아이콘 */}
-            <div className="w-16 h-16 bg-white/20 rounded-2xl flex items-center justify-center backdrop-blur-sm">
+            <div className="w-16 h-16 bg-white/20 rounded-2xl flex items-center justify-center backdrop-blur-sm" aria-hidden="true">
               <GameIcon gameId={gameId} size={40} className="text-white drop-shadow-lg" />
             </div>
 
@@ -90,7 +92,7 @@ export default function GameLobby({
               <div className="flex items-center gap-2 mb-1">
                 <h2 className="text-xl font-bold">{game.name}</h2>
                 {game.isNew && (
-                  <span className="px-2 py-0.5 bg-yellow-400 text-yellow-900 text-xs font-bold rounded">
+                  <span className="px-2 py-0.5 bg-yellow-400 text-yellow-900 text-xs font-bold rounded" aria-label="신규 게임">
                     NEW
                   </span>
                 )}
@@ -98,17 +100,17 @@ export default function GameLobby({
               <p className="text-white/80 text-sm">{game.description}</p>
             </div>
           </div>
-        </div>
+        </section>
 
         {/* 난이도 선택 등 추가 옵션 */}
         {children && (
-          <div className="mt-4 bg-white dark:bg-gray-800 rounded-2xl p-4 shadow-sm">
+          <section aria-label="게임 옵션" className="mt-4 bg-white dark:bg-gray-800 rounded-2xl p-4 shadow-sm">
             {children}
-          </div>
+          </section>
         )}
 
         {/* 미션 & 게임방법 */}
-        <div className="mt-4 bg-white dark:bg-gray-800 rounded-2xl p-4 shadow-sm">
+        <section aria-label="미션 정보" className="mt-4 bg-white dark:bg-gray-800 rounded-2xl p-4 shadow-sm">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Mission</p>
@@ -119,43 +121,46 @@ export default function GameLobby({
             {showHowToPlay && (
               <button
                 onClick={onHowToPlay}
-                className="text-sm text-blue-500 hover:text-blue-600 flex items-center gap-1"
+                aria-label="게임 방법 보기"
+                className="text-sm text-blue-500 hover:text-blue-600 flex items-center gap-1 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 rounded-lg p-1"
               >
                 <span>게임방법</span>
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                 </svg>
               </button>
             )}
           </div>
-        </div>
+        </section>
 
         {/* 미니 랭킹 */}
-        <div className="mt-4 bg-white dark:bg-gray-800 rounded-2xl p-4 shadow-sm">
+        <section aria-label="랭킹" className="mt-4 bg-white dark:bg-gray-800 rounded-2xl p-4 shadow-sm">
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
-              <span className="text-lg">🏆</span>
-              <span className="font-bold text-gray-900 dark:text-white">TOP 3</span>
+              <span className="text-lg" aria-hidden="true">🏆</span>
+              <h3 className="font-bold text-gray-900 dark:text-white">TOP 3</h3>
             </div>
             <Link
               href={`/ranking?game=${gameId}`}
-              className="text-sm text-blue-500 hover:text-blue-600 flex items-center gap-1"
+              aria-label="전체 랭킹 보기"
+              className="text-sm text-blue-500 hover:text-blue-600 flex items-center gap-1 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 rounded-lg p-1"
             >
               <span>더보기</span>
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
               </svg>
             </Link>
           </div>
           <MiniRanking gameType={toGameType(gameId)} difficulty={difficulty} />
-        </div>
+        </section>
 
         {/* 스페이서 */}
-        <div className="flex-1" />
+        <div className="flex-1" aria-hidden="true" />
 
         {/* GAME START 버튼 */}
         <button
           onClick={onStart}
+          aria-label={`${game.name} 게임 시작`}
           className={`
             mt-4 w-full py-4 rounded-2xl font-bold text-lg
             bg-gradient-to-r ${game.gradient}
@@ -164,14 +169,15 @@ export default function GameLobby({
             active:scale-[0.98]
             transition-all duration-200
             flex items-center justify-center gap-3
+            focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-gray-900
           `}
         >
           <span>GAME START</span>
-          <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+          <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
             <path d="M8 5v14l11-7z" />
           </svg>
         </button>
-      </div>
+      </main>
     </div>
   );
 }

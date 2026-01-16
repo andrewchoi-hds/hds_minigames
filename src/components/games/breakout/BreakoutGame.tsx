@@ -20,6 +20,7 @@ export default function BreakoutGame() {
   const [gameState, setGameState] = useState<GameState>(() => initGame());
   const [bestScore, setBestScore] = useState(0);
   const [showScoreModal, setShowScoreModal] = useState(false);
+  const [isPaused, setIsPaused] = useState(false);
   const gameLoopRef = useRef<number | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -43,7 +44,7 @@ export default function BreakoutGame() {
 
   // 게임 루프
   useEffect(() => {
-    if (gameState.isPlaying && !gameState.isGameOver) {
+    if (gameState.isPlaying && !gameState.isGameOver && !isPaused) {
       const loop = () => {
         setGameState(prev => updateGame(prev));
         gameLoopRef.current = requestAnimationFrame(loop);
@@ -56,21 +57,42 @@ export default function BreakoutGame() {
         }
       };
     }
-  }, [gameState.isPlaying, gameState.isGameOver]);
+  }, [gameState.isPlaying, gameState.isGameOver, isPaused]);
 
   // 마우스/터치 핸들러
   const handleMove = useCallback((clientX: number) => {
-    if (!containerRef.current) return;
+    if (!containerRef.current || isPaused) return;
     const rect = containerRef.current.getBoundingClientRect();
     const x = clientX - rect.left;
     setGameState(prev => movePaddle(prev, x));
-  }, []);
+  }, [isPaused]);
 
   const handleClick = useCallback(() => {
+    if (isPaused) return;
     if (!gameState.isPlaying && !gameState.isGameOver && gameState.ball.dy === 0) {
       setGameState(prev => startGame(prev));
     }
-  }, [gameState.isPlaying, gameState.isGameOver, gameState.ball.dy]);
+  }, [gameState.isPlaying, gameState.isGameOver, gameState.ball.dy, isPaused]);
+
+  // 일시정지 토글
+  const togglePause = useCallback(() => {
+    if (gameState.isPlaying && !gameState.isGameOver) {
+      setIsPaused(prev => !prev);
+    }
+  }, [gameState.isPlaying, gameState.isGameOver]);
+
+  // 키보드 이벤트 (Escape 일시정지)
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        togglePause();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [togglePause]);
 
   // 마우스 이벤트
   const handleMouseMove = (e: React.MouseEvent) => {
@@ -86,6 +108,7 @@ export default function BreakoutGame() {
   // 새 게임
   const handleNewGame = () => {
     setGameState(initGame());
+    setIsPaused(false);
   };
 
   const grade = getGrade(gameState.score);
@@ -216,6 +239,26 @@ export default function BreakoutGame() {
           </div>
         )}
 
+        {/* 일시정지 화면 */}
+        {isPaused && !gameState.isGameOver && (
+          <div className="absolute inset-0 flex items-center justify-center bg-black/70 z-20">
+            <div className="text-center">
+              <div className="text-5xl mb-4">⏸️</div>
+              <h2 className="text-2xl font-bold text-white mb-2">일시정지</h2>
+              <p className="text-white/80 text-sm mb-4">ESC 또는 버튼을 눌러 계속하기</p>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  togglePause();
+                }}
+                className="px-6 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-xl font-medium transition-colors"
+              >
+                계속하기
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* 게임 오버 / 승리 */}
         {gameState.isGameOver && (
           <div className="absolute inset-0 flex items-center justify-center bg-black/60">
@@ -275,6 +318,22 @@ export default function BreakoutGame() {
         )}
       </div>
 
+      {/* 일시정지 버튼 (게임 중일 때만) */}
+      {gameState.isPlaying && !gameState.isGameOver && (
+        <div className="mt-4">
+          <button
+            onClick={togglePause}
+            className={`w-full py-3 rounded-xl font-medium transition-colors ${
+              isPaused
+                ? 'bg-green-500 hover:bg-green-600 text-white'
+                : 'bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600'
+            }`}
+          >
+            {isPaused ? '▶️ 계속하기' : '⏸️ 일시정지'}
+          </button>
+        </div>
+      )}
+
       {/* 도움말 */}
       <div className="mt-4 bg-gray-50 dark:bg-gray-800/50 rounded-xl p-4 text-sm">
         <h3 className="font-semibold mb-2">게임 방법</h3>
@@ -282,7 +341,7 @@ export default function BreakoutGame() {
           <li>• 마우스/터치로 패들을 좌우로 움직이세요</li>
           <li>• 공을 튕겨 모든 벽돌을 깨세요</li>
           <li>• 연속으로 벽돌을 깨면 콤보 보너스!</li>
-          <li>• 파워업: 📏 패들 확장 | ❤️ 목숨 추가 | 💎 보너스</li>
+          <li>• ESC 키로 일시정지할 수 있습니다</li>
         </ul>
       </div>
 

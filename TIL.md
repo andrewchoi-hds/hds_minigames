@@ -146,3 +146,101 @@ grep "max-w-md|max-w-xl" src/app
 **배운 것**: TypeScript/JSX 파서는 닫는 태그 누락 시 **다음 닫는 태그**를 오류 위치로 표시
 
 **디버깅**: 오류 줄 번호 **이전**부터 역순으로 탐색, 에디터 괄호 매칭 활용
+
+---
+
+### 9. TypeScript catch 블록 에러 변수 생략
+
+**배운 것**: TypeScript 4.0+ 에서는 catch 블록에서 에러 변수를 사용하지 않을 때 생략 가능
+
+```typescript
+// Before
+try { ... } catch (error) { /* error 사용 안 함 */ }
+
+// After (cleaner)
+try { ... } catch { /* 변수 생략 */ }
+```
+
+**적용**: 에러를 로깅하지 않고 단순히 기본값을 반환하는 경우에 유용
+
+---
+
+### 10. cn() 유틸리티 함수 (clsx + tailwind-merge)
+
+**배운 것**: shadcn/ui 스타일의 className 병합 유틸리티
+
+```typescript
+import { clsx, type ClassValue } from 'clsx';
+import { twMerge } from 'tailwind-merge';
+
+export function cn(...inputs: ClassValue[]) {
+  return twMerge(clsx(inputs));
+}
+```
+
+**장점**:
+- `clsx`: 조건부 클래스 처리 (`isActive && 'active'`)
+- `twMerge`: Tailwind 클래스 충돌 해결 (`bg-red-500 bg-blue-500` → `bg-blue-500`)
+
+---
+
+### 11. Next.js 14 + Jest 설정
+
+**배운 것**: App Router 환경에서 Jest 설정 방법
+
+```javascript
+// jest.config.js
+const nextJest = require('next/jest');
+const createJestConfig = nextJest({ dir: './' });
+
+module.exports = createJestConfig({
+  setupFilesAfterEnv: ['<rootDir>/jest.setup.js'],
+  testEnvironment: 'jest-environment-jsdom',
+  moduleNameMapper: { '^@/(.*)$': '<rootDir>/src/$1' },
+});
+```
+
+**핵심**: `next/jest`가 `tsconfig.json` 및 `.env` 로딩을 자동 처리
+
+---
+
+### 12. Jest에서 localStorage Mock 패턴
+
+**배운 것**: 테스트 간 격리를 위한 localStorage mock 구현
+
+```typescript
+const localStorageMock = (() => {
+  let store: Record<string, string> = {};
+  return {
+    getItem: jest.fn((key) => store[key] || null),
+    setItem: jest.fn((key, value) => { store[key] = value; }),
+    clear: jest.fn(() => { store = {}; }),
+  };
+})();
+
+Object.defineProperty(window, 'localStorage', { value: localStorageMock });
+
+// 각 테스트 전 초기화
+beforeEach(() => {
+  localStorageMock.clear();
+  jest.clearAllMocks();
+});
+```
+
+**장점**: 실제 저장소가 아닌 메모리에서 동작, 테스트 격리 보장
+
+---
+
+### 13. 다크모드 완전성 검증 패턴
+
+**배운 것**: Tailwind 다크모드 적용 여부를 효율적으로 검증하는 방법
+
+```bash
+# dark: 클래스 검색
+grep -r "dark:" src/components --include="*.tsx" | wc -l
+
+# 특정 패턴(배경, 텍스트)이 dark: 없이 사용된 곳 찾기
+grep -rE "bg-(white|gray-[0-9]+)[^\"]*\"" src/components --include="*.tsx" | grep -v "dark:"
+```
+
+**결과**: 모든 컴포넌트에 이미 `dark:` 클래스가 적용되어 있음을 확인

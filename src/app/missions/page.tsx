@@ -49,108 +49,119 @@ export default function MissionsPage() {
     <div className="min-h-screen bg-gray-100 dark:bg-gray-900">
       <div className="max-w-lg mx-auto px-4">
         {/* 헤더 */}
-        <div className="bg-gradient-to-br from-blue-500 to-purple-600 text-white rounded-2xl mt-4 shadow-lg">
-          <div className="px-4 py-3 flex items-center justify-between">
+        <header className="bg-gradient-to-br from-blue-500 to-purple-600 text-white rounded-2xl mt-4 shadow-lg">
+          <nav className="px-4 py-3 flex items-center justify-between" aria-label="미션 페이지 네비게이션">
             <Link
               href="/"
-              className="flex items-center gap-1 text-white/80 hover:text-white transition-colors"
+              aria-label="홈으로 돌아가기"
+              className="flex items-center gap-1 text-white/80 hover:text-white transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-blue-500 rounded-lg p-1"
             >
-              <ChevronLeft size={20} />
+              <ChevronLeft size={20} aria-hidden="true" />
             </Link>
             <h1 className="text-lg font-bold">미션</h1>
-            <div className="w-5" />
-          </div>
+            <div className="w-5" aria-hidden="true" />
+          </nav>
 
           {/* 포인트 */}
           <div className="px-4 pb-4">
-            <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4">
+            <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4" aria-label={`보유 포인트: ${points.toLocaleString()} 포인트`}>
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-white/70 text-sm">내 포인트</p>
-                  <p className="text-3xl font-bold">{points.toLocaleString()}P</p>
+                  <p className="text-3xl font-bold" aria-live="polite">{points.toLocaleString()}P</p>
                 </div>
-                <div className="w-14 h-14 bg-white/20 rounded-2xl flex items-center justify-center">
+                <div className="w-14 h-14 bg-white/20 rounded-2xl flex items-center justify-center" aria-hidden="true">
                   <Gift size={28} />
                 </div>
               </div>
             </div>
           </div>
-        </div>
+        </header>
 
-        {/* 탭 */}
-        <div className="bg-white dark:bg-gray-800 px-4 py-2 rounded-2xl mt-4 shadow-sm">
-        <div className="flex gap-2">
-          <button
-            onClick={() => setActiveTab('daily')}
-            className={`
-              flex-1 py-2 rounded-xl font-medium text-sm transition-all flex items-center justify-center gap-2
-              ${activeTab === 'daily'
-                ? 'bg-blue-500 text-white'
-                : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400'
-              }
-            `}
-          >
-            <Target size={16} />
-            일일 미션
-          </button>
-          <button
-            onClick={() => setActiveTab('weekly')}
-            className={`
-              flex-1 py-2 rounded-xl font-medium text-sm transition-all flex items-center justify-center gap-2
-              ${activeTab === 'weekly'
-                ? 'bg-blue-500 text-white'
-                : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400'
-              }
-            `}
-          >
-            <Calendar size={16} />
-            주간 미션
-          </button>
-        </div>
-        </div>
-
-        {/* 미션 목록 */}
-        <div className="py-4">
-        {/* 진행 상황 */}
-        <div className="mb-4 flex items-center justify-between text-sm">
-          <span className="text-gray-600 dark:text-gray-400">
-            {activeTab === 'daily' ? '오늘' : '이번 주'} 미션 진행
-          </span>
-          <span className="font-bold text-gray-900 dark:text-white">
-            {completedCount}/{currentMissions.length} 완료
-          </span>
-        </div>
-
-        {/* 미션 카드 목록 */}
-        <div className="space-y-3">
-          {currentMissions.map((mission) => (
-            <MissionCard
-              key={mission.id}
-              mission={mission}
-              userProgress={mission.userProgress}
-              onClaim={handleClaim}
-            />
-          ))}
-        </div>
-
-        {currentMissions.length === 0 && (
-          <div className="text-center py-12">
-            <p className="text-gray-500 dark:text-gray-400">
-              미션이 없습니다
-            </p>
+        <main>
+          {/* 탭 */}
+          <div className="bg-white dark:bg-gray-800 px-4 py-2 rounded-2xl mt-4 shadow-sm">
+            <div role="tablist" aria-label="미션 종류 선택" className="flex gap-2">
+              <button
+                role="tab"
+                aria-selected={activeTab === 'daily'}
+                aria-controls="mission-panel"
+                onClick={() => setActiveTab('daily')}
+                className={`
+                  flex-1 py-2 rounded-xl font-medium text-sm transition-all flex items-center justify-center gap-2
+                  focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2
+                  ${activeTab === 'daily'
+                    ? 'bg-blue-500 text-white'
+                    : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400'
+                  }
+                `}
+              >
+                <Target size={16} aria-hidden="true" />
+                일일 미션
+              </button>
+              <button
+                role="tab"
+                aria-selected={activeTab === 'weekly'}
+                aria-controls="mission-panel"
+                onClick={() => setActiveTab('weekly')}
+                className={`
+                  flex-1 py-2 rounded-xl font-medium text-sm transition-all flex items-center justify-center gap-2
+                  focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2
+                  ${activeTab === 'weekly'
+                    ? 'bg-blue-500 text-white'
+                    : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400'
+                  }
+                `}
+              >
+                <Calendar size={16} aria-hidden="true" />
+                주간 미션
+              </button>
+            </div>
           </div>
-        )}
 
-        {/* 안내 */}
-        <div className="mt-6 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-xl">
-          <p className="text-sm text-blue-700 dark:text-blue-300">
-            <strong>TIP:</strong>{' '}
-            {activeTab === 'daily'
-              ? '일일 미션은 매일 자정에 초기화됩니다.'
-              : '주간 미션은 매주 월요일에 초기화됩니다.'}
-          </p>
-        </div>
-      </div>
+          {/* 미션 목록 */}
+          <section id="mission-panel" role="tabpanel" aria-label={`${activeTab === 'daily' ? '일일' : '주간'} 미션 목록`} className="py-4">
+            {/* 진행 상황 */}
+            <div className="mb-4 flex items-center justify-between text-sm">
+              <span className="text-gray-600 dark:text-gray-400">
+                {activeTab === 'daily' ? '오늘' : '이번 주'} 미션 진행
+              </span>
+              <span className="font-bold text-gray-900 dark:text-white" aria-live="polite">
+                {completedCount}/{currentMissions.length} 완료
+              </span>
+            </div>
+
+            {/* 미션 카드 목록 */}
+            <div className="space-y-3" role="list" aria-label="미션 목록">
+              {currentMissions.map((mission) => (
+                <MissionCard
+                  key={mission.id}
+                  mission={mission}
+                  userProgress={mission.userProgress}
+                  onClaim={handleClaim}
+                />
+              ))}
+            </div>
+
+            {currentMissions.length === 0 && (
+              <div className="text-center py-12" role="status">
+                <p className="text-gray-500 dark:text-gray-400">
+                  미션이 없습니다
+                </p>
+              </div>
+            )}
+
+            {/* 안내 */}
+            <aside className="mt-6 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-xl" aria-label="미션 안내">
+              <p className="text-sm text-blue-700 dark:text-blue-300">
+                <strong>TIP:</strong>{' '}
+                {activeTab === 'daily'
+                  ? '일일 미션은 매일 자정에 초기화됩니다.'
+                  : '주간 미션은 매주 월요일에 초기화됩니다.'}
+              </p>
+            </aside>
+          </section>
+        </main>
       </div>
     </div>
   );

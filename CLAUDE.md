@@ -11,6 +11,8 @@ Next.js 14 기반의 미니게임 플랫폼으로, 우리은행 WON PLAY를 벤�
 - **백엔드**: Supabase (랭킹 시스템)
 - **상태 관리**: localStorage (미션, 포인트, 통계, 업적)
 - **아이콘**: lucide-react
+- **테스트**: Jest + React Testing Library
+- **유틸리티**: clsx, tailwind-merge (cn 함수)
 
 ### 주요 기능
 - **13개 미니게임**: 스도쿠, 2048, 메모리, 지뢰찾기, 워들, 슬라이딩퍼즐, 타이핑, 반응속도, 숫자야구, 플래피버드, 뱀, 벽돌깨기, 색상맞추기
@@ -61,11 +63,23 @@ Next.js 14 기반의 미니게임 플랫폼으로, 우리은행 WON PLAY를 벤�
 │       ├── attendance.ts             # 출석 시스템
 │       ├── supabase.ts               # Supabase 클라이언트
 │       ├── auth.ts                   # 로컬 사용자 인증
+│       ├── utils.ts                  # 유틸리티 함수 (cn)
+│       ├── __tests__/                # 테스트 파일
+│       │   └── mission.test.ts       # 미션 시스템 테스트
+│       ├── games/
+│       │   ├── snake.ts              # 뱀 게임 로직
+│       │   ├── puzzle-2048.ts        # 2048 게임 로직
+│       │   └── __tests__/            # 게임 로직 테스트
+│       │       ├── snake.test.ts
+│       │       └── puzzle-2048.test.ts
 │       └── data/
 │           ├── games.ts              # 게임 메타데이터
 │           ├── missions.ts           # 미션 정의
 │           └── countries.ts          # 국가 데이터
 ├── context.md                        # 프로젝트 컨텍스트 (개선 로드맵)
+├── jest.config.js                    # Jest 설정
+├── jest.setup.js                     # Jest 셋업 (localStorage mock)
+├── .env.example                      # 환경 변수 템플릿
 └── .claude/                          # Claude 에이전트 설정
 ```
 
@@ -239,3 +253,84 @@ function getRawUserMissions(): Record<string, UserMission> {
 | `mini_games_achievements` | 업적 해금 상태 | achievements.ts |
 | `mini_games_stats` | 게임별/전체 통계 | stats.ts |
 | `mini_games_attendance_log` | 출석 기록 | attendance.ts |
+
+---
+
+## 테스트
+
+### 테스트 실행
+```bash
+npm test           # 전체 테스트 실행
+npm run test:watch # 파일 변경 시 자동 실행
+npm run test:coverage # 커버리지 리포트
+```
+
+### 테스트 구조
+- **게임 로직 테스트**: `src/lib/games/__tests__/`
+  - `snake.test.ts` (16개 테스트): 초기화, 방향 전환, 충돌 감지, 점수 계산
+  - `puzzle-2048.test.ts` (13개 테스트): 그리드 생성, 타일 이동/병합, 점수 계산
+- **시스템 테스트**: `src/lib/__tests__/`
+  - `mission.test.ts` (8개 테스트): 포인트 관리, 미션 보상 수령
+
+### localStorage Mock 패턴
+```typescript
+const localStorageMock = (() => {
+  let store: Record<string, string> = {};
+  return {
+    getItem: jest.fn((key: string) => store[key] || null),
+    setItem: jest.fn((key: string, value: string) => { store[key] = value; }),
+    clear: jest.fn(() => { store = {}; }),
+  };
+})();
+
+Object.defineProperty(window, 'localStorage', { value: localStorageMock });
+```
+
+---
+
+## 에러 처리
+
+### ErrorBoundary 컴포넌트
+`src/components/ErrorBoundary.tsx` - React 클래스 컴포넌트로 에러를 캐치합니다.
+
+```tsx
+import { ErrorBoundary } from '@/components/ErrorBoundary';
+
+<ErrorBoundary>
+  <SomeComponent />
+</ErrorBoundary>
+```
+
+### Next.js App Router 에러 페이지
+- `src/app/error.tsx` - 전역 에러 페이지 (reset 버튼 포함)
+- `src/app/not-found.tsx` - 404 페이지
+
+---
+
+## 유틸리티 함수
+
+### cn() - 클래스네임 병합
+`src/lib/utils.ts`에서 제공하는 Tailwind 클래스 병합 유틸리티입니다.
+
+```typescript
+import { cn } from '@/lib/utils';
+
+// 조건부 클래스 적용
+<div className={cn(
+  'base-class',
+  isActive && 'active-class',
+  variant === 'primary' ? 'bg-blue-500' : 'bg-gray-500'
+)} />
+```
+
+### 스켈레톤 컴포넌트
+`src/components/ui/Skeleton.tsx`에서 로딩 상태 UI를 제공합니다.
+
+```tsx
+import { GameCardSkeleton, RankingRowSkeleton } from '@/components/ui/Skeleton';
+
+// 로딩 중일 때
+{isLoading ? <GameCardSkeleton /> : <GameCard />}
+```
+
+**제공 컴포넌트**: Skeleton, TextSkeleton, CircleSkeleton, CardSkeleton, GameCardSkeleton, RankingRowSkeleton, RankingBoardSkeleton, MiniRankingSkeleton, MissionCardSkeleton, ProfileSkeleton

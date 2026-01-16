@@ -17,6 +17,7 @@ export default function FlappyGame() {
   const [gameState, setGameState] = useState<GameState>(() => initGame());
   const [bestScore, setBestScore] = useState(0);
   const [showScoreModal, setShowScoreModal] = useState(false);
+  const [isPaused, setIsPaused] = useState(false);
   const gameLoopRef = useRef<number | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const lastTimeRef = useRef<number>(0);
@@ -41,7 +42,7 @@ export default function FlappyGame() {
 
   // 게임 루프 (고정 프레임레이트)
   useEffect(() => {
-    if (gameState.isPlaying && !gameState.isGameOver) {
+    if (gameState.isPlaying && !gameState.isGameOver && !isPaused) {
       const FPS = 60;
       const frameTime = 1000 / FPS;
 
@@ -62,16 +63,34 @@ export default function FlappyGame() {
         }
       };
     }
-  }, [gameState.isPlaying, gameState.isGameOver]);
+  }, [gameState.isPlaying, gameState.isGameOver, isPaused]);
 
   // 점프 핸들러
   const handleJump = useCallback(() => {
+    if (isPaused) return;
     setGameState(prev => jump(prev));
-  }, []);
+  }, [isPaused]);
+
+  // 일시정지 토글
+  const togglePause = useCallback(() => {
+    if (gameState.isPlaying && !gameState.isGameOver) {
+      setIsPaused(prev => !prev);
+    }
+  }, [gameState.isPlaying, gameState.isGameOver]);
 
   // 키보드 이벤트
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      // Escape 키: 일시정지 토글
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        togglePause();
+        return;
+      }
+
+      // 일시정지 중에는 다른 키 무시
+      if (isPaused) return;
+
       if (e.key === ' ' || e.key === 'ArrowUp' || e.key === 'w' || e.key === 'W') {
         e.preventDefault();
         handleJump();
@@ -80,11 +99,12 @@ export default function FlappyGame() {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [handleJump]);
+  }, [handleJump, isPaused, togglePause]);
 
   // 새 게임
   const handleNewGame = () => {
     setGameState(initGame());
+    setIsPaused(false);
   };
 
   const grade = getGrade(gameState.score);
@@ -204,6 +224,26 @@ export default function FlappyGame() {
           </div>
         )}
 
+        {/* 일시정지 화면 */}
+        {isPaused && !gameState.isGameOver && (
+          <div className="absolute inset-0 flex items-center justify-center bg-black/70 z-20">
+            <div className="text-center">
+              <div className="text-5xl mb-4">⏸️</div>
+              <h2 className="text-2xl font-bold text-white mb-2">일시정지</h2>
+              <p className="text-white/80 text-sm mb-4">ESC 또는 버튼을 눌러 계속하기</p>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  togglePause();
+                }}
+                className="px-6 py-2 bg-yellow-500 hover:bg-yellow-600 text-white rounded-xl font-medium transition-colors"
+              >
+                계속하기
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* 게임 오버 */}
         {gameState.isGameOver && (
           <div className="absolute inset-0 flex items-center justify-center bg-black/50">
@@ -249,20 +289,40 @@ export default function FlappyGame() {
       </div>
 
       {/* 컨트롤 버튼 (모바일) */}
-      <div className="mt-4">
+      <div className="mt-4 flex gap-2">
         <button
           onTouchStart={(e) => {
             e.preventDefault();
-            handleJump();
+            if (!isPaused) handleJump();
           }}
           onClick={(e) => {
             e.stopPropagation();
-            handleJump();
+            if (!isPaused) handleJump();
           }}
-          className="w-full py-6 bg-yellow-500 hover:bg-yellow-600 active:bg-yellow-700 text-white rounded-xl font-bold text-lg transition-colors"
+          className={`flex-1 py-6 rounded-xl font-bold text-lg transition-colors ${
+            isPaused
+              ? 'bg-gray-400 text-white cursor-not-allowed'
+              : 'bg-yellow-500 hover:bg-yellow-600 active:bg-yellow-700 text-white'
+          }`}
+          disabled={isPaused}
         >
           🐦 점프!
         </button>
+        {gameState.isPlaying && !gameState.isGameOver && (
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              togglePause();
+            }}
+            className={`px-6 py-6 rounded-xl font-bold text-lg transition-colors ${
+              isPaused
+                ? 'bg-green-500 hover:bg-green-600 text-white'
+                : 'bg-gray-500 hover:bg-gray-600 text-white'
+            }`}
+          >
+            {isPaused ? '▶️' : '⏸️'}
+          </button>
+        )}
       </div>
 
       {/* 도움말 */}
@@ -272,7 +332,7 @@ export default function FlappyGame() {
           <li>• 화면을 터치하거나 스페이스바를 눌러 점프</li>
           <li>• 파이프 사이를 통과하세요</li>
           <li>• 파이프나 바닥/천장에 부딪히면 게임 오버!</li>
-          <li>• 더 많은 파이프를 통과할수록 고득점!</li>
+          <li>• ESC 키로 일시정지할 수 있습니다</li>
         </ul>
       </div>
 

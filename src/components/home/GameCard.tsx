@@ -1,5 +1,6 @@
 'use client';
 
+import { memo } from 'react';
 import Link from 'next/link';
 import { GameInfo } from '@/lib/data/games';
 import { GameIcon } from '@/components/icons';
@@ -9,7 +10,7 @@ type GameCardProps = {
   variant?: 'list' | 'grid';
 };
 
-export default function GameCard({ game, variant = 'list' }: GameCardProps) {
+function GameCard({ game, variant = 'list' }: GameCardProps) {
   if (variant === 'grid') {
     return <GridCard game={game} />;
   }
@@ -17,12 +18,15 @@ export default function GameCard({ game, variant = 'list' }: GameCardProps) {
   return <ListCard game={game} />;
 }
 
+export default memo(GameCard);
+
 // WON PLAY 스타일 리스트 카드
-function ListCard({ game }: { game: GameInfo }) {
+const ListCard = memo(function ListCard({ game }: { game: GameInfo }) {
   return (
     <Link
       href={`/${game.id}`}
-      className="flex items-center gap-4 p-4 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors rounded-xl group"
+      aria-label={`${game.name} 게임 시작하기${game.isNew ? ' (신규 게임)' : ''}${game.isPopular ? ' (인기 게임)' : ''}`}
+      className="flex items-center gap-4 p-4 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors rounded-xl group focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
     >
       {/* 아이콘 영역 */}
       <div
@@ -32,6 +36,7 @@ function ListCard({ game }: { game: GameInfo }) {
           shadow-lg group-hover:scale-105 transition-transform
           flex-shrink-0
         `}
+        aria-hidden="true"
       >
         <GameIcon gameId={game.id} size={28} className="text-white drop-shadow-md" />
       </div>
@@ -43,12 +48,12 @@ function ListCard({ game }: { game: GameInfo }) {
             {game.name}
           </h3>
           {game.isNew && (
-            <span className="px-1.5 py-0.5 bg-yellow-400 text-yellow-900 text-[10px] font-bold rounded">
+            <span className="px-1.5 py-0.5 bg-yellow-400 text-yellow-900 text-[10px] font-bold rounded" aria-label="신규 게임">
               NEW
             </span>
           )}
           {game.isPopular && !game.isNew && (
-            <span className="px-1.5 py-0.5 bg-red-500 text-white text-[10px] font-bold rounded">
+            <span className="px-1.5 py-0.5 bg-red-500 text-white text-[10px] font-bold rounded" aria-label="인기 게임">
               HOT
             </span>
           )}
@@ -64,6 +69,7 @@ function ListCard({ game }: { game: GameInfo }) {
         fill="none"
         stroke="currentColor"
         viewBox="0 0 24 24"
+        aria-hidden="true"
       >
         <path
           strokeLinecap="round"
@@ -74,17 +80,19 @@ function ListCard({ game }: { game: GameInfo }) {
       </svg>
     </Link>
   );
-}
+});
 
 // 그리드 카드 (필요시 사용)
-function GridCard({ game }: { game: GameInfo }) {
+const GridCard = memo(function GridCard({ game }: { game: GameInfo }) {
   return (
     <Link
       href={`/${game.id}`}
-      className="block rounded-2xl overflow-hidden bg-white dark:bg-gray-800 shadow-md hover:shadow-xl transition-all duration-300 hover:-translate-y-1 border border-gray-100 dark:border-gray-700 group"
+      aria-label={`${game.name} 게임 시작하기${game.isNew ? ' (신규 게임)' : ''}${game.isPopular ? ' (인기 게임)' : ''}`}
+      className="block rounded-2xl overflow-hidden bg-white dark:bg-gray-800 shadow-md hover:shadow-xl transition-all duration-300 hover:-translate-y-1 border border-gray-100 dark:border-gray-700 group focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
     >
       <div
         className={`relative bg-gradient-to-br ${game.gradient} h-32 flex items-center justify-center overflow-hidden`}
+        aria-hidden="true"
       >
         <div className="absolute inset-0 opacity-20">
           <div
@@ -100,12 +108,12 @@ function GridCard({ game }: { game: GameInfo }) {
           className="text-white transform group-hover:scale-110 transition-transform duration-300 drop-shadow-lg"
         />
         {game.isNew && (
-          <span className="absolute top-3 right-3 px-2.5 py-1 bg-yellow-400 text-yellow-900 text-xs font-bold rounded-full shadow-lg">
+          <span className="absolute top-3 right-3 px-2.5 py-1 bg-yellow-400 text-yellow-900 text-xs font-bold rounded-full shadow-lg" aria-label="신규 게임">
             NEW
           </span>
         )}
         {game.isPopular && !game.isNew && (
-          <span className="absolute top-3 right-3 px-2.5 py-1 bg-red-500 text-white text-xs font-bold rounded-full shadow-lg">
+          <span className="absolute top-3 right-3 px-2.5 py-1 bg-red-500 text-white text-xs font-bold rounded-full shadow-lg" aria-label="인기 게임">
             HOT
           </span>
         )}
@@ -120,4 +128,4 @@ function GridCard({ game }: { game: GameInfo }) {
       </div>
     </Link>
   );
-}
+});

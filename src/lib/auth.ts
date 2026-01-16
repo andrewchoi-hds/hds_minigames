@@ -29,6 +29,15 @@ export function setLocalUser(user: LocalUser) {
   localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(user));
 }
 
+// 로컬 스토리지의 사용자 정보 부분 업데이트
+export function updateLocalUser(updates: Partial<LocalUser>) {
+  const currentUser = getLocalUser();
+  if (!currentUser) return;
+
+  const updatedUser = { ...currentUser, ...updates };
+  setLocalUser(updatedUser);
+}
+
 // 로컬 스토리지에서 사용자 정보 삭제
 export function clearLocalUser() {
   if (typeof window === 'undefined') return;

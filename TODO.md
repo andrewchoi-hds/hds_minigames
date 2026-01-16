@@ -1,6 +1,6 @@
 # TODO - 다음 작업 목록
 
-> 마지막 업데이트: 2026-01-15
+> 마지막 업데이트: 2026-01-16
 
 ## P0 - 긴급 (즉시 수행)
 
@@ -45,42 +45,56 @@
 - `isSupabaseConfigured` 검증 활용
 - **완료**: 2026-01-15
 
-### [ ] 접근성(A11y) 개선
-- `aria-label` 추가
-- 키보드 네비게이션 지원
-- Lighthouse 접근성 점수 90 이상
-- **예상 시간**: 3시간
+### [x] 접근성(A11y) 개선 ✅
+- `aria-label` 추가 (버튼, 링크, 아이콘)
+- 키보드 네비게이션 지원 (focus-visible:ring)
+- 시맨틱 HTML (header, main, nav, section, article)
+- role 속성 (tab, tablist, progressbar, list)
+- aria-live 동적 콘텐츠 업데이트
+- **완료**: 2026-01-16
 
-### [ ] 성능 최적화
-- React DevTools Profiler로 측정
-- `React.memo`, `useCallback`, `useMemo` 적용
-- **예상 시간**: 2시간
+### [x] 성능 최적화 ✅
+- React.memo 적용: GameCard, MissionCard, CategoryTabs, MiniRanking, RankingRow
+- useCallback 적용: loadRanking, handleClaim, onChange 핸들러
+- useMemo 적용: 미션 진행도 계산
+- 유틸 함수 컴포넌트 외부 분리: formatTime, getRankIcon
+- **완료**: 2026-01-16
 
-### [ ] PWA 지원
-- `next-pwa` 설치
-- `manifest.json` 생성
-- 오프라인 페이지 생성
-- **예상 시간**: 2시간
+### [x] PWA 지원 ✅
+- `@ducanh2912/next-pwa` 설치 및 설정
+- `manifest.json` 생성 (앱 이름, 아이콘, 테마 컬러)
+- 192x192, 512x512 앱 아이콘 자동 생성
+- 오프라인 페이지 (`/offline`) 생성
+- layout.tsx에 PWA 메타데이터 추가
+- **완료**: 2026-01-16
 
-### [ ] 게임 결과 공유 기능 개선
-- `html2canvas`로 이미지 생성
-- Web Share API로 공유
-- **예상 시간**: 2시간
+### [x] 게임 결과 공유 기능 개선 ✅
+- `html2canvas`로 결과 영역 이미지 캡처
+- Web Share API로 이미지 파일 공유
+- 미지원 브라우저 이미지 다운로드 폴백
+- GameResultModal에 "이미지 저장" 버튼 추가
+- **완료**: 2026-01-16
 
-### [ ] 국가 선택 UI 개선
-- 검색 가능한 국가 선택 모달
-- 프로필에서 국가 변경 가능
-- **예상 시간**: 2시간
+### [x] 국가 선택 UI 개선 ✅
+- `CountrySelectModal` 컴포넌트 생성
+- 검색 기능 (국가명/코드 필터링)
+- 프로필 페이지에서 국가 변경 기능
+- `updateLocalUser()` 함수 추가
+- **완료**: 2026-01-16
 
-### [ ] 랭킹 시스템 캐싱
-- React Query 또는 SWR 적용
-- stale-while-revalidate 전략
-- **예상 시간**: 2시간
+### [x] 랭킹 시스템 캐싱 ✅
+- SWR 적용 (stale-while-revalidate)
+- `src/hooks/useRanking.ts` 커스텀 훅 생성
+- RankingBoard, MiniRanking 컴포넌트 적용
+- 중복 요청 방지 (dedupingInterval)
+- 자동 재검증 (revalidateOnFocus)
+- **완료**: 2026-01-16
 
-### [ ] 게임 일시정지 기능
+### [x] 게임 일시정지 기능 ✅
 - 액션 게임(뱀, 플래피, 벽돌깨기)에 Esc 키 토글
 - 일시정지 오버레이 표시
-- **예상 시간**: 1시간
+- 모바일용 일시정지/재개 버튼 추가
+- **완료**: 2026-01-16
 
 ---
 
@@ -112,7 +126,8 @@
 1. ~~**console.log 제거** (P0)~~ ✅
 2. ~~**에러 바운더리 추가** (P1)~~ ✅
 3. ~~**환경 변수 검증** (P2)~~ ✅
-4. **게임 일시정지 기능** (P2) - 1시간
+4. ~~**게임 일시정지 기능** (P2)~~ ✅
+5. ~~**랭킹 캐싱 (SWR)** (P2)~~ ✅
 
 ---
 
@@ -124,5 +139,5 @@
 | ~~테스트 코드 없음~~ | ~~높음~~ | ~~높음~~ | ~~P1~~ ✅ |
 | ~~다크모드 불완전~~ | ~~중간~~ | ~~중간~~ | ~~P1~~ ✅ |
 | ~~에러 바운더리 없음~~ | ~~높음~~ | ~~낮음~~ | ~~P1~~ ✅ |
-| 랭킹 캐싱 없음 | 높음 | 중간 | P2 |
-| 접근성 미흡 | 중간 | 중간 | P2 |
+| ~~랭킹 캐싱 없음~~ | ~~높음~~ | ~~중간~~ | ~~P2~~ ✅ |
+| ~~접근성 미흡~~ | ~~중간~~ | ~~중간~~ | ~~P2~~ ✅ |

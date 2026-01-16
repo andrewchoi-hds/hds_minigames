@@ -21,6 +21,7 @@ export default function SnakeGame() {
   const [gameState, setGameState] = useState<GameState>(() => initGame());
   const [bestScore, setBestScore] = useState(0);
   const [showScoreModal, setShowScoreModal] = useState(false);
+  const [isPaused, setIsPaused] = useState(false);
   const gameLoopRef = useRef<NodeJS.Timeout | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -44,7 +45,7 @@ export default function SnakeGame() {
 
   // 게임 루프
   useEffect(() => {
-    if (gameState.isPlaying && !gameState.isGameOver) {
+    if (gameState.isPlaying && !gameState.isGameOver && !isPaused) {
       gameLoopRef.current = setInterval(() => {
         setGameState((prev) => updateGame(prev));
       }, gameState.speed);
@@ -55,16 +56,33 @@ export default function SnakeGame() {
         }
       };
     }
-  }, [gameState.isPlaying, gameState.isGameOver, gameState.speed]);
+  }, [gameState.isPlaying, gameState.isGameOver, gameState.speed, isPaused]);
 
   // 방향 변경 핸들러
   const handleChangeDirection = useCallback((direction: Direction) => {
     setGameState((prev) => changeDirection(prev, direction));
   }, []);
 
+  // 일시정지 토글
+  const togglePause = useCallback(() => {
+    if (gameState.isPlaying && !gameState.isGameOver) {
+      setIsPaused((prev) => !prev);
+    }
+  }, [gameState.isPlaying, gameState.isGameOver]);
+
   // 키보드 이벤트
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      // Escape 키: 일시정지 토글
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        togglePause();
+        return;
+      }
+
+      // 일시정지 중에는 다른 키 무시
+      if (isPaused) return;
+
       if (!gameState.isPlaying && !gameState.isGameOver) {
         if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', ' ', 'w', 'a', 's', 'd'].includes(e.key.toLowerCase())) {
           e.preventDefault();
@@ -99,11 +117,12 @@ export default function SnakeGame() {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [gameState.isPlaying, gameState.isGameOver, handleChangeDirection]);
+  }, [gameState.isPlaying, gameState.isGameOver, handleChangeDirection, isPaused, togglePause]);
 
   // 새 게임
   const handleNewGame = () => {
     setGameState(initGame());
+    setIsPaused(false);
   };
 
   // 터치 이벤트
@@ -246,6 +265,23 @@ export default function SnakeGame() {
           </div>
         )}
 
+        {/* 일시정지 화면 */}
+        {isPaused && !gameState.isGameOver && (
+          <div className="absolute inset-0 flex items-center justify-center bg-black/70 z-20">
+            <div className="text-center">
+              <div className="text-5xl mb-4">⏸️</div>
+              <h2 className="text-2xl font-bold text-white mb-2">일시정지</h2>
+              <p className="text-white/80 text-sm mb-4">ESC 또는 버튼을 눌러 계속하기</p>
+              <button
+                onClick={togglePause}
+                className="px-6 py-2 bg-green-500 hover:bg-green-600 text-white rounded-xl font-medium transition-colors"
+              >
+                계속하기
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* 게임 오버 */}
         {gameState.isGameOver && (
           <div className="absolute inset-0 flex items-center justify-center bg-black/60">
@@ -316,11 +352,19 @@ export default function SnakeGame() {
           onClick={() => {
             if (!gameState.isPlaying && !gameState.isGameOver) {
               setGameState((prev) => startGame(prev));
+            } else if (gameState.isPlaying && !gameState.isGameOver) {
+              togglePause();
             }
           }}
-          className="py-4 bg-green-500 hover:bg-green-600 text-white rounded-xl font-bold transition-colors"
+          className={`py-4 rounded-xl font-bold transition-colors ${
+            isPaused
+              ? 'bg-yellow-500 hover:bg-yellow-600 text-white'
+              : gameState.isPlaying
+              ? 'bg-gray-500 hover:bg-gray-600 text-white'
+              : 'bg-green-500 hover:bg-green-600 text-white'
+          }`}
         >
-          {gameState.isPlaying ? '🐍' : 'GO'}
+          {isPaused ? '▶️' : gameState.isPlaying ? '⏸️' : 'GO'}
         </button>
         <button
           onClick={() => handleChangeDirection('right')}
@@ -345,7 +389,7 @@ export default function SnakeGame() {
           <li>• 화살표 키 또는 WASD로 뱀을 조종하세요</li>
           <li>• 🍎 사과를 먹으면 뱀이 길어집니다</li>
           <li>• 벽이나 자기 몸에 부딪히면 게임 오버!</li>
-          <li>• 점점 빨라지는 속도에 도전하세요!</li>
+          <li>• ESC 키로 일시정지할 수 있습니다</li>
         </ul>
       </div>
 

@@ -1,42 +1,45 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { getRanking } from '@/lib/ranking';
+import { memo } from 'react';
 import { GameType, RankingEntry } from '@/lib/supabase';
 import { getCountryByCode, DEFAULT_COUNTRY_CODE } from '@/lib/data/countries';
 import { MiniRankingSkeleton } from '@/components/ui/Skeleton';
+import { useMiniRanking } from '@/hooks/useRanking';
 
 type Props = {
   gameType: GameType;
   difficulty?: string;
 };
 
-export default function MiniRanking({ gameType, difficulty }: Props) {
-  const [ranking, setRanking] = useState<RankingEntry[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+// 컴포넌트 외부로 분리 (재생성 방지)
+const getRankIcon = (rank: number) => {
+  if (rank === 1) return '🥇';
+  if (rank === 2) return '🥈';
+  if (rank === 3) return '🥉';
+  return rank.toString();
+};
 
-  useEffect(() => {
-    loadRanking();
-  }, [gameType, difficulty]);
+// 랭킹 행 컴포넌트 (memo로 최적화)
+const RankingItem = memo(function RankingItem({ entry }: { entry: RankingEntry }) {
+  return (
+    <div className="flex items-center gap-3 py-1">
+      <span className="text-lg w-6 text-center">{getRankIcon(entry.rank)}</span>
+      <span className="text-base">
+        {getCountryByCode(entry.country || DEFAULT_COUNTRY_CODE)?.flag}
+      </span>
+      <span className="flex-1 font-medium text-gray-900 dark:text-white truncate">
+        {entry.nickname}
+      </span>
+      <span className="font-mono font-bold text-blue-500">
+        {entry.score.toLocaleString()}
+      </span>
+    </div>
+  );
+});
 
-  const loadRanking = async () => {
-    setIsLoading(true);
-    const result = await getRanking({
-      gameType,
-      difficulty,
-      period: 'all',
-      limit: 3,
-    });
-    setRanking(result.data);
-    setIsLoading(false);
-  };
-
-  const getRankIcon = (rank: number) => {
-    if (rank === 1) return '🥇';
-    if (rank === 2) return '🥈';
-    if (rank === 3) return '🥉';
-    return rank.toString();
-  };
+function MiniRanking({ gameType, difficulty }: Props) {
+  // SWR 훅 사용
+  const { ranking, isLoading } = useMiniRanking(gameType, difficulty);
 
   if (isLoading) {
     return <MiniRankingSkeleton />;
@@ -53,22 +56,10 @@ export default function MiniRanking({ gameType, difficulty }: Props) {
   return (
     <div className="space-y-2">
       {ranking.map((entry) => (
-        <div
-          key={entry.user_id}
-          className="flex items-center gap-3 py-1"
-        >
-          <span className="text-lg w-6 text-center">{getRankIcon(entry.rank)}</span>
-          <span className="text-base">
-            {getCountryByCode(entry.country || DEFAULT_COUNTRY_CODE)?.flag}
-          </span>
-          <span className="flex-1 font-medium text-gray-900 dark:text-white truncate">
-            {entry.nickname}
-          </span>
-          <span className="font-mono font-bold text-blue-500">
-            {entry.score.toLocaleString()}
-          </span>
-        </div>
+        <RankingItem key={entry.user_id} entry={entry} />
       ))}
     </div>
   );
 }
+
+export default memo(MiniRanking);

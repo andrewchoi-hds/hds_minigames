@@ -1,11 +1,11 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { getRanking, getMyRank, Period } from '@/lib/ranking';
+import { useState, memo } from 'react';
+import { Period } from '@/lib/ranking';
 import { GameType, GAME_NAMES, RankingEntry } from '@/lib/supabase';
-import { getLocalUser } from '@/lib/auth';
 import { getCountryByCode, DEFAULT_COUNTRY_CODE } from '@/lib/data/countries';
 import { RankingRowSkeleton } from '@/components/ui/Skeleton';
+import { useRanking } from '@/hooks/useRanking';
 
 type Props = {
   gameType: GameType;
@@ -20,6 +20,56 @@ const PERIOD_LABELS: Record<Period, string> = {
   all: '전체',
 };
 
+// 유틸 함수들 (컴포넌트 외부로 분리하여 재생성 방지)
+const formatTime = (seconds: number | null) => {
+  if (!seconds) return '-';
+  const mins = Math.floor(seconds / 60);
+  const secs = seconds % 60;
+  return `${mins}:${secs.toString().padStart(2, '0')}`;
+};
+
+const getRankIcon = (rank: number) => {
+  if (rank === 1) return '🥇';
+  if (rank === 2) return '🥈';
+  if (rank === 3) return '🥉';
+  return rank.toString();
+};
+
+// 랭킹 행 컴포넌트 (memo로 최적화)
+type RankingRowProps = {
+  entry: RankingEntry;
+  isMe: boolean;
+};
+
+const RankingRow = memo(function RankingRow({ entry, isMe }: RankingRowProps) {
+  return (
+    <tr
+      className={`${
+        isMe ? 'bg-blue-50 dark:bg-blue-900/20' : ''
+      } hover:bg-gray-50 dark:hover:bg-gray-700/30`}
+    >
+      <td className="px-4 py-3 font-medium">
+        <span className={entry.rank <= 3 ? 'text-xl' : ''}>
+          {getRankIcon(entry.rank)}
+        </span>
+      </td>
+      <td className="px-4 py-3">
+        <span className={`flex items-center gap-2 ${isMe ? 'font-bold text-blue-500' : ''}`}>
+          <span className="text-lg">{getCountryByCode(entry.country || DEFAULT_COUNTRY_CODE)?.flag}</span>
+          {entry.nickname}
+          {isMe && ' (나)'}
+        </span>
+      </td>
+      <td className="px-4 py-3 text-right font-mono font-bold">
+        {entry.score.toLocaleString()}
+      </td>
+      <td className="px-4 py-3 text-right font-mono text-gray-500">
+        {formatTime(entry.time_seconds)}
+      </td>
+    </tr>
+  );
+});
+
 export default function RankingBoard({
   gameType,
   difficulty,
@@ -27,49 +77,15 @@ export default function RankingBoard({
   limit = 100,
 }: Props) {
   const [period, setPeriod] = useState<Period>('all');
-  const [ranking, setRanking] = useState<RankingEntry[]>([]);
-  const [myRank, setMyRank] = useState<number>(0);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string>('');
 
-  const currentUser = getLocalUser();
-
-  useEffect(() => {
-    loadRanking();
-  }, [gameType, difficulty, period]);
-
-  const loadRanking = async () => {
-    setIsLoading(true);
-    setError('');
-
-    const [rankingResult, myRankResult] = await Promise.all([
-      getRanking({ gameType, difficulty, period, limit }),
-      currentUser ? getMyRank({ gameType, difficulty, period }) : Promise.resolve(0),
-    ]);
-
-    if (rankingResult.error) {
-      setError(rankingResult.error);
-    } else {
-      setRanking(rankingResult.data);
-    }
-
-    setMyRank(myRankResult);
-    setIsLoading(false);
-  };
-
-  const formatTime = (seconds: number | null) => {
-    if (!seconds) return '-';
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins}:${secs.toString().padStart(2, '0')}`;
-  };
-
-  const getRankIcon = (rank: number) => {
-    if (rank === 1) return '🥇';
-    if (rank === 2) return '🥈';
-    if (rank === 3) return '🥉';
-    return rank.toString();
-  };
+  // SWR 훅 사용
+  const { ranking, myRank, isLoading, error, refresh, currentUser } = useRanking({
+    gameType,
+    difficulty,
+    period,
+    limit,
+    revalidateOnFocus: true,
+  });
 
   return (
     <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm overflow-hidden">
@@ -119,7 +135,7 @@ export default function RankingBoard({
         <div className="p-4 text-center text-red-500">
           {error}
           <button
-            onClick={loadRanking}
+            onClick={refresh}
             className="block mx-auto mt-2 text-sm text-blue-500 hover:underline"
           >
             다시 시도
@@ -146,36 +162,13 @@ export default function RankingBoard({
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
-                  {ranking.map((entry) => {
-                    const isMe = currentUser && entry.user_id === currentUser.id;
-                    return (
-                      <tr
-                        key={entry.user_id}
-                        className={`${
-                          isMe ? 'bg-blue-50 dark:bg-blue-900/20' : ''
-                        } hover:bg-gray-50 dark:hover:bg-gray-700/30`}
-                      >
-                        <td className="px-4 py-3 font-medium">
-                          <span className={entry.rank <= 3 ? 'text-xl' : ''}>
-                            {getRankIcon(entry.rank)}
-                          </span>
-                        </td>
-                        <td className="px-4 py-3">
-                          <span className={`flex items-center gap-2 ${isMe ? 'font-bold text-blue-500' : ''}`}>
-                            <span className="text-lg">{getCountryByCode(entry.country || DEFAULT_COUNTRY_CODE)?.flag}</span>
-                            {entry.nickname}
-                            {isMe && ' (나)'}
-                          </span>
-                        </td>
-                        <td className="px-4 py-3 text-right font-mono font-bold">
-                          {entry.score.toLocaleString()}
-                        </td>
-                        <td className="px-4 py-3 text-right font-mono text-gray-500">
-                          {formatTime(entry.time_seconds)}
-                        </td>
-                      </tr>
-                    );
-                  })}
+                  {ranking.map((entry) => (
+                    <RankingRow
+                      key={entry.user_id}
+                      entry={entry}
+                      isMe={!!(currentUser && entry.user_id === currentUser.id)}
+                    />
+                  ))}
                 </tbody>
               </table>
             </div>

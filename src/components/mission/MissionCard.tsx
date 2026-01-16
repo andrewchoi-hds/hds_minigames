@@ -1,9 +1,9 @@
 'use client';
 
+import { memo, useState, useCallback, useMemo } from 'react';
 import { Mission, UserMission } from '@/lib/data/missions';
 import { claimMissionReward } from '@/lib/mission';
-import { useState } from 'react';
-import { Gift, Check, ChevronRight } from 'lucide-react';
+import { Gift, Check } from 'lucide-react';
 
 type Props = {
   mission: Mission;
@@ -11,15 +11,18 @@ type Props = {
   onClaim?: (points: number) => void;
 };
 
-export default function MissionCard({ mission, userProgress, onClaim }: Props) {
+function MissionCard({ mission, userProgress, onClaim }: Props) {
   const [claiming, setClaiming] = useState(false);
 
-  const progress = userProgress?.progress || 0;
-  const completed = userProgress?.completed || false;
-  const claimed = !!userProgress?.claimedAt;
-  const progressPercent = Math.min(100, (progress / mission.targetValue) * 100);
+  const { progress, completed, claimed, progressPercent } = useMemo(() => {
+    const prog = userProgress?.progress || 0;
+    const comp = userProgress?.completed || false;
+    const clm = !!userProgress?.claimedAt;
+    const percent = Math.min(100, (prog / mission.targetValue) * 100);
+    return { progress: prog, completed: comp, claimed: clm, progressPercent: percent };
+  }, [userProgress, mission.targetValue]);
 
-  const handleClaim = async () => {
+  const handleClaim = useCallback(async () => {
     if (!completed || claimed || claiming) return;
 
     setClaiming(true);
@@ -30,10 +33,13 @@ export default function MissionCard({ mission, userProgress, onClaim }: Props) {
     }
 
     setClaiming(false);
-  };
+  }, [completed, claimed, claiming, mission.id, onClaim]);
+
+  const statusText = claimed ? '보상 수령 완료' : completed ? '완료, 보상 수령 가능' : '진행 중';
 
   return (
-    <div
+    <article
+      aria-label={`${mission.title} - ${statusText}`}
       className={`
         relative p-4 rounded-xl border transition-all
         ${claimed
@@ -54,6 +60,7 @@ export default function MissionCard({ mission, userProgress, onClaim }: Props) {
               : 'bg-gray-100 dark:bg-gray-700'
             }
           `}
+          aria-hidden="true"
         >
           {mission.icon}
         </div>
@@ -64,8 +71,8 @@ export default function MissionCard({ mission, userProgress, onClaim }: Props) {
             <h3 className="font-bold text-gray-900 dark:text-white text-sm">
               {mission.title}
             </h3>
-            <span className="text-xs font-medium text-yellow-600 dark:text-yellow-400 flex items-center gap-1">
-              <Gift size={12} />
+            <span className="text-xs font-medium text-yellow-600 dark:text-yellow-400 flex items-center gap-1" aria-label={`보상 ${mission.rewardPoints} 포인트`}>
+              <Gift size={12} aria-hidden="true" />
               {mission.rewardPoints}P
             </span>
           </div>
@@ -76,7 +83,14 @@ export default function MissionCard({ mission, userProgress, onClaim }: Props) {
 
           {/* 진행도 바 */}
           <div className="flex items-center gap-2">
-            <div className="flex-1 h-1.5 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+            <div
+              className="flex-1 h-1.5 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden"
+              role="progressbar"
+              aria-valuenow={progress}
+              aria-valuemin={0}
+              aria-valuemax={mission.targetValue}
+              aria-label={`미션 진행도: ${progress}/${mission.targetValue}`}
+            >
               <div
                 className={`h-full rounded-full transition-all duration-300 ${
                   completed ? 'bg-green-500' : 'bg-blue-500'
@@ -84,7 +98,7 @@ export default function MissionCard({ mission, userProgress, onClaim }: Props) {
                 style={{ width: `${progressPercent}%` }}
               />
             </div>
-            <span className="text-xs font-mono text-gray-500 dark:text-gray-400 w-16 text-right">
+            <span className="text-xs font-mono text-gray-500 dark:text-gray-400 w-16 text-right" aria-hidden="true">
               {progress >= mission.targetValue
                 ? 'DONE'
                 : `${progress}/${mission.targetValue}`}
@@ -97,11 +111,13 @@ export default function MissionCard({ mission, userProgress, onClaim }: Props) {
           <button
             onClick={handleClaim}
             disabled={claiming}
+            aria-label={`${mission.title} 보상 ${mission.rewardPoints} 포인트 받기`}
             className={`
               px-3 py-1.5 rounded-lg text-xs font-bold
               bg-green-500 text-white
               hover:bg-green-600 active:scale-95
               transition-all flex-shrink-0
+              focus:outline-none focus-visible:ring-2 focus-visible:ring-green-500 focus-visible:ring-offset-2
               ${claiming ? 'opacity-50' : ''}
             `}
           >
@@ -110,12 +126,14 @@ export default function MissionCard({ mission, userProgress, onClaim }: Props) {
         )}
 
         {claimed && (
-          <div className="flex items-center gap-1 text-green-500 flex-shrink-0">
-            <Check size={16} />
+          <div className="flex items-center gap-1 text-green-500 flex-shrink-0" aria-label="보상 수령 완료">
+            <Check size={16} aria-hidden="true" />
             <span className="text-xs font-medium">완료</span>
           </div>
         )}
       </div>
-    </div>
+    </article>
   );
 }
+
+export default memo(MissionCard);

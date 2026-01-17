@@ -240,4 +240,29 @@ export const ScoreCalculator = {
     const streakBonus = maxStreak * 50;
     return score + roundBonus + streakBonus;
   },
+
+  // 틱택토: 승리 × 난이도 배수
+  ticTacToe: (won: boolean, difficulty: string, moveCount: number): number => {
+    if (!won) return 0;
+    const diffMultiplier: Record<string, number> = { easy: 1, normal: 2, hard: 5 };
+    const mult = diffMultiplier[difficulty] || 1;
+    const speedBonus = Math.max(0, (9 - moveCount) * 20);
+    return (500 + speedBonus) * mult;
+  },
+
+  // 사이먼: 레벨² × 10 (레벨이 높을수록 급격히 증가)
+  simon: (level: number): number => {
+    return level * level * 10;
+  },
+
+  // 하이로우: 점수 + 최대연속 보너스
+  highLow: (score: number, maxStreak: number): number => {
+    const streakBonus = maxStreak * maxStreak * 5; // 연속이 높을수록 보너스 증가
+    return score + streakBonus;
+  },
+
+  // 럭키다이스: 점수 그대로 (이미 게임 내에서 ×100 적용됨)
+  luckyDice: (score: number, bonusCount: number): number => {
+    return score + bonusCount * 100;
+  },
 };

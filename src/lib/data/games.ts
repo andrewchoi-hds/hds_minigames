@@ -135,6 +135,44 @@ export const GAMES: GameInfo[] = [
     isNew: true,
     gradient: 'from-purple-500 to-pink-500',
   },
+
+  // 신규 게임
+  {
+    id: 'tic-tac-toe',
+    name: '틱택토',
+    description: 'AI와 대결하는 클래식 게임',
+    emoji: '⭕',
+    category: 'brain',
+    isNew: true,
+    gradient: 'from-blue-500 to-indigo-600',
+  },
+  {
+    id: 'simon',
+    name: '사이먼 게임',
+    description: '색깔 패턴을 기억하고 따라하세요',
+    emoji: '🎵',
+    category: 'brain',
+    isNew: true,
+    gradient: 'from-purple-500 to-pink-600',
+  },
+  {
+    id: 'high-low',
+    name: '하이로우',
+    description: '다음 카드가 높을지 낮을지 맞춰보세요',
+    emoji: '🃏',
+    category: 'brain',
+    isNew: true,
+    gradient: 'from-green-500 to-emerald-600',
+  },
+  {
+    id: 'lucky-dice',
+    name: '럭키 다이스',
+    description: '주사위를 굴려 행운을 시험하세요',
+    emoji: '🎲',
+    category: 'action',
+    isNew: true,
+    gradient: 'from-yellow-400 to-orange-500',
+  },
 ];
 
 // 인기 게임 필터

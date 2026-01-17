@@ -55,7 +55,11 @@ export type GameType =
   | 'flappy'
   | 'snake'
   | 'breakout'
-  | 'color-match';
+  | 'color-match'
+  | 'tic-tac-toe'
+  | 'simon'
+  | 'high-low'
+  | 'lucky-dice';
 
 // 게임별 표시 이름
 export const GAME_NAMES: Record<GameType, string> = {
@@ -72,4 +76,8 @@ export const GAME_NAMES: Record<GameType, string> = {
   snake: '뱀 게임',
   breakout: '벽돌깨기',
   'color-match': '색상 맞추기',
+  'tic-tac-toe': '틱택토',
+  simon: '사이먼 게임',
+  'high-low': '하이로우',
+  'lucky-dice': '럭키 다이스',
 };

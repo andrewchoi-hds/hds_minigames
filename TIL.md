@@ -1,5 +1,161 @@
 # TIL (Today I Learned)
 
+## 2026-01-17
+
+### 1. 레벨 티어 시스템 설계 패턴
+
+**배운 것**: 단순 레벨(1-20) 위에 시각적 계층(bronze → legendary)을 추가하는 게이미피케이션 패턴
+
+```typescript
+function getLevelTier(level: number): 'bronze' | 'silver' | 'gold' | 'platinum' | 'diamond' | 'legendary' {
+  if (level <= 3) return 'bronze';
+  if (level <= 6) return 'silver';
+  if (level <= 10) return 'gold';
+  if (level <= 14) return 'platinum';
+  if (level <= 18) return 'diamond';
+  return 'legendary';
+}
+```
+
+**장점**: 티어 변화 시점(4, 7, 11, 15, 19레벨)에서 성취감 제공, 시각적 차별화
+
+---
+
+### 2. Tailwind CSS 화려한 애니메이션
+
+**배운 것**: `@keyframes` + `animate-[name_duration_timing_iteration]` 조합
+
+```css
+/* shimmer - 배경 흐르는 효과 */
+@keyframes shimmer {
+  0% { background-position: -200% center; }
+  100% { background-position: 200% center; }
+}
+
+/* shine - 빛 반사 효과 */
+@keyframes shine {
+  0% { transform: translateX(-100%); opacity: 0; }
+  50% { opacity: 0.5; }
+  100% { transform: translateX(100%); opacity: 0; }
+}
+```
+
+**사용**: `className="animate-[shimmer_2s_ease-in-out_infinite]"`
+
+---
+
+### 3. React memo 조건부 props 전달 패턴
+
+```tsx
+type Props = {
+  entry: Entry;
+  isMe: boolean;
+  levelInfo?: LevelInfo;  // optional
+};
+
+// 호출 시
+<Row
+  entry={entry}
+  isMe={isMe}
+  levelInfo={isMe ? levelInfo || undefined : undefined}
+/>
+```
+
+**교훈**: `prop || undefined`로 명시적으로 전달하면 타입 안전성 향상
+
+---
+
+### 4. 다층 애니메이션 레이어링
+
+```tsx
+<div className="relative">
+  {/* 레이어 1: 외부 글로우 */}
+  <div className="absolute -inset-2 blur-lg opacity-60 bg-gradient-to-r animate-pulse" />
+
+  {/* 레이어 2: 메인 컨테이너 */}
+  <div className="relative bg-gradient-to-br animate-shimmer">
+    {/* 레이어 3: 빛 반사 */}
+    <div className="absolute inset-0 via-white/30 animate-[shine_2s]" />
+
+    {/* 레이어 4: 콘텐츠 */}
+    <span className="relative z-10">...</span>
+  </div>
+</div>
+```
+
+**핵심**: `-inset-2` = 부모보다 크게, `blur` + 음수 inset = 외곽 글로우
+
+---
+
+### 5. Tailwind 그라데이션 via 키워드
+
+```tsx
+// 2색 → 3색 이상 그라데이션
+bg-gradient-to-br from-amber-400 via-rose-500 via-purple-500 to-indigo-500
+```
+
+**효과**: 더욱 부드러운 색상 전환, 풍부한 시각적 깊이
+
+---
+
+### 6. 크기별 스타일 객체 패턴
+
+```typescript
+const SIZE_CLASSES = {
+  sm: { container: 'px-2 py-1', icon: 'text-sm' },
+  md: { container: 'px-3 py-1.5', icon: 'text-lg' },
+  lg: { container: 'px-4 py-2', icon: 'text-2xl' },
+};
+
+const sizeClasses = SIZE_CLASSES[size];
+<div className={sizeClasses.container}>
+```
+
+**장점**: 일관된 크기 변화, 타입 안전성, 유지보수 용이
+
+---
+
+### 7. 조건부 애니메이션 적용 패턴
+
+```tsx
+<div className={`
+  ${animate && tier === 'legendary' ? 'animate-shimmer' : ''}
+  ${animate && tier === 'gold' ? 'animate-pulse' : ''}
+`}>
+```
+
+**용도**: 성능 최적화, 접근성(prefers-reduced-motion), 테스트 환경
+
+---
+
+### 8. shadow-{color}/{opacity} 문법
+
+```tsx
+// 색상 있는 그림자
+shadow-lg shadow-yellow-500/40
+shadow-2xl shadow-amber-500/70
+```
+
+**효과**: 티어 색상과 일치하는 그림자로 시각적 일관성
+
+---
+
+### 9. 게임 레벨/랭킹 시스템 연동
+
+```tsx
+// RankingBoard에서
+const levelInfo = getLevelInfo(getUserPoints());
+
+// RankingRow에 조건부 전달
+<RankingRow
+  levelInfo={isMe ? levelInfo : undefined}
+/>
+```
+
+**교훈**: localStorage 기반 시스템 간 연동은 import만으로 간단히 처리
+
+---
+
 ## 2026-01-15
 
 ### 1. 무한 재귀 패턴과 해결법

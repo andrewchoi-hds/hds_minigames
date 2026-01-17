@@ -21,6 +21,10 @@ const GAMES: { type: GameType; emoji: string; difficulties?: string[] }[] = [
   { type: 'snake', emoji: '🐍' },
   { type: 'breakout', emoji: '🧱' },
   { type: 'color-match', emoji: '🎨' },
+  { type: 'tic-tac-toe', emoji: '⭕', difficulties: ['easy', 'normal', 'hard'] },
+  { type: 'simon', emoji: '🎵' },
+  { type: 'high-low', emoji: '🃏' },
+  { type: 'lucky-dice', emoji: '🎲' },
 ];
 
 export default function RankingPage() {

@@ -1,11 +1,14 @@
 'use client';
 
-import { useState, memo } from 'react';
+import { useState, memo, useEffect } from 'react';
 import { Period } from '@/lib/ranking';
 import { GameType, GAME_NAMES, RankingEntry } from '@/lib/supabase';
 import { getCountryByCode, DEFAULT_COUNTRY_CODE } from '@/lib/data/countries';
 import { RankingRowSkeleton } from '@/components/ui/Skeleton';
 import { useRanking } from '@/hooks/useRanking';
+import { getLevelInfo, LevelInfo } from '@/lib/level';
+import { getUserPoints } from '@/lib/mission';
+import LevelBadge, { LevelBadgeCompact } from '@/components/ui/LevelBadge';
 
 type Props = {
   gameType: GameType;
@@ -39,14 +42,15 @@ const getRankIcon = (rank: number) => {
 type RankingRowProps = {
   entry: RankingEntry;
   isMe: boolean;
+  levelInfo?: LevelInfo;
 };
 
-const RankingRow = memo(function RankingRow({ entry, isMe }: RankingRowProps) {
+const RankingRow = memo(function RankingRow({ entry, isMe, levelInfo }: RankingRowProps) {
   return (
     <tr
       className={`${
-        isMe ? 'bg-blue-50 dark:bg-blue-900/20' : ''
-      } hover:bg-gray-50 dark:hover:bg-gray-700/30`}
+        isMe ? 'bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/30 dark:to-purple-900/30' : ''
+      } hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors`}
     >
       <td className="px-4 py-3 font-medium">
         <span className={entry.rank <= 3 ? 'text-xl' : ''}>
@@ -54,11 +58,14 @@ const RankingRow = memo(function RankingRow({ entry, isMe }: RankingRowProps) {
         </span>
       </td>
       <td className="px-4 py-3">
-        <span className={`flex items-center gap-2 ${isMe ? 'font-bold text-blue-500' : ''}`}>
+        <div className={`flex items-center gap-2 ${isMe ? 'font-bold text-blue-600 dark:text-blue-400' : ''}`}>
           <span className="text-lg">{getCountryByCode(entry.country || DEFAULT_COUNTRY_CODE)?.flag}</span>
-          {entry.nickname}
-          {isMe && ' (나)'}
-        </span>
+          <span>{entry.nickname}</span>
+          {isMe && levelInfo && (
+            <LevelBadgeCompact level={levelInfo.level} />
+          )}
+          {isMe && <span className="text-xs text-purple-500">(나)</span>}
+        </div>
       </td>
       <td className="px-4 py-3 text-right font-mono font-bold">
         {entry.score.toLocaleString()}
@@ -77,6 +84,7 @@ export default function RankingBoard({
   limit = 100,
 }: Props) {
   const [period, setPeriod] = useState<Period>('all');
+  const [levelInfo, setLevelInfo] = useState<LevelInfo | null>(null);
 
   // SWR 훅 사용
   const { ranking, myRank, isLoading, error, refresh, currentUser } = useRanking({
@@ -86,6 +94,14 @@ export default function RankingBoard({
     limit,
     revalidateOnFocus: true,
   });
+
+  // 레벨 정보 로드
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const points = getUserPoints();
+      setLevelInfo(getLevelInfo(points));
+    }
+  }, []);
 
   return (
     <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm overflow-hidden">
@@ -162,13 +178,17 @@ export default function RankingBoard({
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
-                  {ranking.map((entry) => (
-                    <RankingRow
-                      key={entry.user_id}
-                      entry={entry}
-                      isMe={!!(currentUser && entry.user_id === currentUser.id)}
-                    />
-                  ))}
+                  {ranking.map((entry) => {
+                    const isMe = !!(currentUser && entry.user_id === currentUser.id);
+                    return (
+                      <RankingRow
+                        key={entry.user_id}
+                        entry={entry}
+                        isMe={isMe}
+                        levelInfo={isMe ? levelInfo || undefined : undefined}
+                      />
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
@@ -176,10 +196,15 @@ export default function RankingBoard({
 
           {/* 내 순위 */}
           {currentUser && myRank > 0 && (
-            <div className="p-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700/30">
-              <div className="text-center">
-                <span className="text-gray-500 dark:text-gray-400">내 순위: </span>
-                <span className="font-bold text-lg text-blue-500">{myRank}위</span>
+            <div className="p-4 border-t border-gray-200 dark:border-gray-700 bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20">
+              <div className="flex items-center justify-center gap-4">
+                {levelInfo && (
+                  <LevelBadge levelInfo={levelInfo} size="md" showTitle={true} />
+                )}
+                <div className="text-center">
+                  <span className="text-gray-500 dark:text-gray-400">내 순위: </span>
+                  <span className="font-bold text-xl text-blue-600 dark:text-blue-400">{myRank}위</span>
+                </div>
               </div>
             </div>
           )}

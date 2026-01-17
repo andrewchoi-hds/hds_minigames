@@ -86,6 +86,17 @@ Next.js 14 기반의 미니게임 플랫폼으로, 우리은행 WON PLAY를 벤�
 └── .claude/                          # Claude 에이전트 설정
 ```
 
+### Git 리모트 설정
+| 리모트 | 레포지토리 | 용도 |
+|--------|------------|------|
+| origin | `andrewchoi-hds/hds_minigames` | 메인 개발 레포 |
+| vercel | `andrewchoi-hds/minigames_hds` | Vercel 배포용 |
+
+```bash
+# 배포 시
+git push origin main && git push vercel main
+```
+
 ---
 
 ## 구현 완료 기능
